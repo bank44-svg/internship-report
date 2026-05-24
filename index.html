@@ -1321,9 +1321,9 @@ async function sheetsUpdateRange(range, values){
   return res.json();
 }
 
-async function sheetsUpdateCell(range, value){
+async function sheetsUpdateCell(range, value, inputOption='USER_ENTERED'){
   if(!state.token) throw new Error('ไม่มี access token');
-  const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=${inputOption}`;
   const res = await fetch(url,{
     method:'PUT',
     headers:{ 'Authorization':`Bearer ${state.token}`, 'Content-Type':'application/json' },
@@ -1531,17 +1531,28 @@ function switchStudentView(view){
    PROFILE — student fills phone numbers + mentor info
    ============================================================ */
 const PROFILE_FIELDS = ['phone','parent_phone','mentor_name','mentor_phone'];
+const PHONE_FIELDS = ['phone','parent_phone','mentor_phone'];
 
 function profileIncomplete(user){
   return PROFILE_FIELDS.some(f => !(user[f]||'').trim());
 }
 
+// Pad leading 0 if Sheets stripped it for old data
+function fmtPhone(v){
+  if(!v) return '—';
+  const s = String(v).trim();
+  if(/^\d{9}$/.test(s)) return '0' + s;     // 9 หลัก = ขาด 0
+  if(/^\d{8}$/.test(s)) return '0' + s;     // 8 หลัก = เบอร์บ้าน เช่น 21234567 → 021234567
+  return s;
+}
+
 function renderProfileForm(){
   const u = state.user;
-  $('#pf_phone').value = u.phone || '';
-  $('#pf_parent_phone').value = u.parent_phone || '';
+  // ถ้าเบอร์เดิมขาด 0 ก็เติมให้ใน input
+  $('#pf_phone').value = u.phone ? fmtPhone(u.phone) : '';
+  $('#pf_parent_phone').value = u.parent_phone ? fmtPhone(u.parent_phone) : '';
   $('#pf_mentor_name').value = u.mentor_name || '';
-  $('#pf_mentor_phone').value = u.mentor_phone || '';
+  $('#pf_mentor_phone').value = u.mentor_phone ? fmtPhone(u.mentor_phone) : '';
   $('#profileBanner').classList.toggle('hidden', !profileIncomplete(u));
 }
 
@@ -1573,7 +1584,8 @@ async function onSubmitProfile(e){
     for(const f of PROFILE_FIELDS){
       const ci = headers.indexOf(f);
       if(ci<0){ throw new Error(`ไม่พบคอลัมน์ "${f}" ใน Sheet — กรุณาเพิ่มคอลัมน์ก่อน`); }
-      await sheetsUpdateCell(`users!${colLetter(ci)}${sheetRow}`, data[f]);
+      // RAW mode = ไม่ตีความตัวเลข เก็บเป็น text เพื่อรักษา 0 ข้างหน้าเบอร์โทร
+      await sheetsUpdateCell(`users!${colLetter(ci)}${sheetRow}`, data[f], 'RAW');
     }
     Object.assign(state.user, data);
     saveSession();
@@ -1604,10 +1616,10 @@ function renderStudentsInfo(){
           ${incomplete ? '<span class="badge badge-yellow">ยังไม่กรอก</span>' : '<span class="badge badge-green">ครบ</span>'}
         </div>
         <div style="font-size:13px;color:var(--text);padding-left:46px;line-height:1.7">
-          <div>📱 นักศึกษา: ${escapeHtml(s.phone||'—')}</div>
-          <div>👨‍👩‍👧 ผู้ปกครอง: ${escapeHtml(s.parent_phone||'—')}</div>
+          <div>📱 นักศึกษา: ${escapeHtml(fmtPhone(s.phone))}</div>
+          <div>👨‍👩‍👧 ผู้ปกครอง: ${escapeHtml(fmtPhone(s.parent_phone))}</div>
           <div>🧑‍🏫 พี่เลี้ยง: ${escapeHtml(s.mentor_name||'—')}</div>
-          <div>📞 เบอร์พี่เลี้ยง: ${escapeHtml(s.mentor_phone||'—')}</div>
+          <div>📞 เบอร์พี่เลี้ยง: ${escapeHtml(fmtPhone(s.mentor_phone))}</div>
         </div>
       </div>`;
   }).join('');
