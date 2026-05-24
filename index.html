@@ -1397,23 +1397,37 @@ async function saveSettingDriveFolder(folderId){
   }
 }
 
-// Sync permissions: share root folder with all users in users tab
+// Sync permissions: share root folder AND the Sheet with all users in users tab
 async function syncFolderPermissions(){
   const folderId = state.settings.drive_folder_id;
   if(!folderId) throw new Error('ยังไม่ได้ตั้ง drive_folder_id');
   if(!state.users.length) await loadUsers();
-  // Get current permissions
-  const res = await driveFetch(`/files/${folderId}/permissions?fields=permissions(id,emailAddress,role)`);
-  const data = await res.json();
-  const existing = new Set((data.permissions||[])
-    .map(p => (p.emailAddress||'').toLowerCase())
-    .filter(Boolean));
+
+  // Get current permissions for folder and sheet
+  async function getExistingEmails(fileId){
+    try{
+      const res = await driveFetch(`/files/${fileId}/permissions?fields=permissions(id,emailAddress,role)`);
+      const data = await res.json();
+      return new Set((data.permissions||[]).map(p => (p.emailAddress||'').toLowerCase()).filter(Boolean));
+    }catch(e){ console.warn('get permissions fail',fileId,e.message); return new Set(); }
+  }
+  const folderExisting = await getExistingEmails(folderId);
+  const sheetExisting  = await getExistingEmails(CONFIG.SHEET_ID);
+
   let added=0, failed=0;
   for(const u of state.users){
     const email = (u.email||'').toLowerCase();
-    if(!email || existing.has(email)) continue;
-    const ok = await driveSharePermission(folderId, email, 'writer');
-    if(ok) added++; else failed++;
+    if(!email) continue;
+    let didAdd = false;
+    if(!folderExisting.has(email)){
+      const ok = await driveSharePermission(folderId, email, 'writer');
+      if(ok) didAdd = true; else failed++;
+    }
+    if(!sheetExisting.has(email)){
+      const ok = await driveSharePermission(CONFIG.SHEET_ID, email, 'writer');
+      if(ok) didAdd = true; else failed++;
+    }
+    if(didAdd) added++;
   }
   return { added, failed, total: state.users.length };
 }
