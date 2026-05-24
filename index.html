@@ -97,15 +97,15 @@ a{color:inherit;text-decoration:none}
   text-align:center;
 }
 .login-logo{
-  width:80px;height:80px;
-  background:linear-gradient(135deg,#ff9ec7,#b8336a);
-  border-radius:24px;
-  margin:0 auto 20px;
+  width:96px;height:96px;
+  background:var(--white);
+  border-radius:50%;
+  margin:0 auto 18px;
   display:flex;align-items:center;justify-content:center;
-  color:var(--white);
-  font-size:36px;
-  box-shadow:0 8px 20px rgba(184,51,106,.35);
+  overflow:hidden;
+  box-shadow:0 8px 20px rgba(184,51,106,.25), 0 0 0 4px rgba(255,255,255,.5);
 }
+.login-logo img{width:100%;height:100%;object-fit:contain;padding:6px}
 .login-college{
   display:inline-block;
   font-family:'Mali','Prompt',sans-serif;
@@ -190,6 +190,14 @@ a{color:inherit;text-decoration:none}
     padding:0 20px 20px;
     border-bottom:1px solid rgba(255,255,255,.1);
     font-weight:700;font-size:16px;
+  }
+  .sidebar-brand .brand-row{
+    display:flex;align-items:center;gap:10px;
+  }
+  .sidebar-brand img.brand-logo{
+    width:38px;height:38px;border-radius:50%;
+    background:var(--white);object-fit:contain;padding:3px;
+    flex-shrink:0;
   }
   .sidebar-nav{flex:1;padding:16px 0;display:flex;flex-direction:column;gap:4px}
   .sidebar-item{
@@ -563,7 +571,7 @@ a{color:inherit;text-decoration:none}
      ============================================================ -->
 <div id="screen-login" class="screen active">
   <div class="login-card">
-    <div class="login-logo">🌸</div>
+    <div class="login-logo"><img src="logo.png" alt="โลโก้วิทยาลัย"></div>
     <div class="login-college">วิทยาลัยการอาชีพแกลง</div>
     <div class="login-title">ระบบรายงานนักศึกษาฝึกงาน</div>
     <div class="login-subtitle">✨ เข้าสู่ระบบด้วยบัญชี Google ✨</div>
@@ -580,8 +588,13 @@ a{color:inherit;text-decoration:none}
     <!-- Sidebar (desktop) -->
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <div style="font-size:13px;opacity:.85;font-weight:500;margin-bottom:2px">วิทยาลัยการอาชีพแกลง</div>
-        🌸 รายงานฝึกงาน
+        <div class="brand-row">
+          <img src="logo.png" alt="" class="brand-logo">
+          <div>
+            <div style="font-size:11px;opacity:.85;font-weight:500;line-height:1.2">วิทยาลัยการอาชีพแกลง</div>
+            <div style="font-size:14px;font-weight:700">รายงานฝึกงาน</div>
+          </div>
+        </div>
       </div>
       <nav class="sidebar-nav">
         <button class="sidebar-item active" data-view="form">
@@ -603,10 +616,13 @@ a{color:inherit;text-decoration:none}
     <div class="content-area">
       <!-- Mobile header -->
       <header class="app-header">
-        <div style="min-width:0;flex:1">
-          <div style="font-size:10px;opacity:.75;font-weight:500;letter-spacing:.04em">วิทยาลัยการอาชีพแกลง</div>
-          <div class="title" id="stuName">นักศึกษา</div>
-          <div class="subtitle" id="stuToday"></div>
+        <div style="min-width:0;flex:1;display:flex;align-items:center;gap:10px">
+          <img src="logo.png" alt="" style="width:36px;height:36px;border-radius:50%;background:#fff;object-fit:contain;padding:2px;flex-shrink:0">
+          <div style="min-width:0;flex:1">
+            <div style="font-size:10px;opacity:.75;font-weight:500;letter-spacing:.04em">วิทยาลัยการอาชีพแกลง</div>
+            <div class="title" id="stuName">นักศึกษา</div>
+            <div class="subtitle" id="stuToday"></div>
+          </div>
         </div>
         <div class="header-user">
           <div class="avatar" id="stuAvatar"></div>
@@ -696,8 +712,13 @@ a{color:inherit;text-decoration:none}
   <div class="app-shell">
     <aside class="sidebar">
       <div class="sidebar-brand">
-        <div style="font-size:13px;opacity:.85;font-weight:500;margin-bottom:2px">วิทยาลัยการอาชีพแกลง</div>
-        💐 แดชบอร์ดครู
+        <div class="brand-row">
+          <img src="logo.png" alt="" class="brand-logo">
+          <div>
+            <div style="font-size:11px;opacity:.85;font-weight:500;line-height:1.2">วิทยาลัยการอาชีพแกลง</div>
+            <div style="font-size:14px;font-weight:700">แดชบอร์ดครู</div>
+          </div>
+        </div>
       </div>
       <nav class="sidebar-nav">
         <button class="sidebar-item active" data-view="overview">
@@ -721,10 +742,13 @@ a{color:inherit;text-decoration:none}
 
     <div class="content-area">
       <header class="app-header">
-        <div style="min-width:0;flex:1">
-          <div style="font-size:10px;opacity:.75;font-weight:500;letter-spacing:.04em">วิทยาลัยการอาชีพแกลง</div>
-          <div class="title" id="tchName">ครู</div>
-          <div class="subtitle" id="tchToday"></div>
+        <div style="min-width:0;flex:1;display:flex;align-items:center;gap:10px">
+          <img src="logo.png" alt="" style="width:36px;height:36px;border-radius:50%;background:#fff;object-fit:contain;padding:2px;flex-shrink:0">
+          <div style="min-width:0;flex:1">
+            <div style="font-size:10px;opacity:.75;font-weight:500;letter-spacing:.04em">วิทยาลัยการอาชีพแกลง</div>
+            <div class="title" id="tchName">ครู</div>
+            <div class="subtitle" id="tchToday"></div>
+          </div>
         </div>
         <div class="header-user">
           <div class="avatar" id="tchAvatar"></div>
