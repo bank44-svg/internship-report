@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<title>ระบบรายงานนักศึกษาฝึกงาน · วิทยาลัยการอาชีพแกลง</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+/* ============================================================
+   CSS Variables & Reset
+   ============================================================ */
+:root{
+  /* Pastel pink-purple theme — friendly for female students */
+  --navy:#b8336a;          /* primary: rose pink */
+  --navy-light:#d96a99;    /* lighter pink for accents */
+  --navy-dark:#8e2454;     /* deeper rose for hover */
+  --accent:#9b6dd7;        /* lavender accent */
+  --accent-soft:#ede4f7;   /* lavender pastel */
+  --white:#ffffff;
+  --bg:#fdf6f9;            /* very soft cream-pink background */
+  --card:#ffffff;
+  --text:#3d2c3a;          /* warm dark plum for text */
+  --muted:#8b7280;
+  --border:#f3dfe6;
+  --green:#10b981;
+  --green-soft:#d1fae5;
+  --red:#ef4444;
+  --red-soft:#fee2e2;
+  --yellow:#f59e0b;
+  --yellow-soft:#fff4d6;
+  --gray:#b8a4ad;
+  --gray-soft:#faf0f4;     /* very pale pink */
+  --blue:#9b6dd7;          /* repurposed as lavender for variety */
+  --pink:#ff7eb6;
+  --pink-soft:#ffe1ed;
+  --shadow:0 2px 6px rgba(184,51,106,.08);
+  --shadow-lg:0 12px 30px rgba(184,51,106,.18);
+  --radius:16px;
+  --radius-sm:10px;
+  --tap:44px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:'Prompt','Sukhumvit Set','Noto Sans Thai',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  font-size:15px;
+  line-height:1.6;
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+  letter-spacing:.01em;
+}
+/* Headings / titles use Mali (rounded, friendly) */
+.login-title,.sidebar-brand,.app-header .title,
+.desktop-header h1,.card h2,.modal-head h3{
+  font-family:'Mali','Prompt',sans-serif;
+  font-weight:600;
+  letter-spacing:0;
+}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+
+/* ============================================================
+   Layout - Screens
+   ============================================================ */
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+
+/* ============================================================
+   Login Screen
+   ============================================================ */
+#screen-login{
+  display:none;
+  min-height:100vh;
+  background:linear-gradient(135deg,#ff9ec7 0%,#b8336a 50%,#9b6dd7 100%);
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+#screen-login.active{display:flex}
+.login-card{
+  background:var(--white);
+  border-radius:20px;
+  padding:36px 28px;
+  width:100%;
+  max-width:380px;
+  box-shadow:var(--shadow-lg);
+  text-align:center;
+}
+.login-logo{
+  width:80px;height:80px;
+  background:linear-gradient(135deg,#ff9ec7,#b8336a);
+  border-radius:24px;
+  margin:0 auto 20px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--white);
+  font-size:36px;
+  box-shadow:0 8px 20px rgba(184,51,106,.35);
+}
+.login-college{
+  display:inline-block;
+  font-family:'Mali','Prompt',sans-serif;
+  font-size:13px;font-weight:600;
+  color:var(--navy);
+  background:var(--pink-soft);
+  padding:6px 14px;border-radius:99px;
+  margin-bottom:12px;letter-spacing:.02em;
+}
+.login-title{font-size:22px;font-weight:700;margin-bottom:6px;color:var(--navy);line-height:1.3}
+.login-subtitle{color:var(--muted);font-size:14px;margin-bottom:28px;font-weight:300}
+#googleBtn{display:flex;justify-content:center;min-height:var(--tap)}
+.login-error{
+  margin-top:16px;padding:12px;
+  background:var(--red-soft);color:var(--red);
+  border-radius:var(--radius-sm);font-size:14px;
+  display:none;
+}
+.login-error.show{display:block}
+
+/* ============================================================
+   App shell (student / teacher common)
+   ============================================================ */
+.app-header{
+  background:linear-gradient(135deg,#b8336a 0%,#d96a99 100%);
+  color:var(--white);
+  padding:16px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+  box-shadow:0 2px 8px rgba(184,51,106,.15);
+}
+.app-header .title{font-size:16px;font-weight:600}
+.app-header .subtitle{font-size:12px;opacity:.7;margin-top:2px}
+.header-user{display:flex;align-items:center;gap:10px}
+.avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--navy-light);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;font-size:14px;overflow:hidden;
+}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.logout-btn{
+  min-width:var(--tap);min-height:var(--tap);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:var(--white);opacity:.7;
+}
+.logout-btn:hover{opacity:1}
+
+.main{padding:16px;padding-bottom:90px;max-width:1200px;margin:0 auto}
+
+.bottom-tabs{
+  position:fixed;bottom:0;left:0;right:0;
+  background:var(--white);
+  border-top:1px solid var(--border);
+  display:flex;
+  z-index:40;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.tab{
+  flex:1;
+  min-height:var(--tap);
+  padding:10px 4px;
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  color:var(--muted);font-size:11px;font-weight:500;
+}
+.tab.active{color:var(--navy)}
+.tab-icon{font-size:20px}
+
+/* Sidebar for desktop */
+.sidebar{display:none}
+
+@media (min-width:768px){
+  .app-shell{display:flex;min-height:100vh}
+  .sidebar{
+    display:flex;flex-direction:column;
+    width:240px;
+    background:linear-gradient(180deg,#b8336a 0%,#9b6dd7 100%);
+    color:var(--white);
+    padding:20px 0;position:sticky;top:0;height:100vh;
+  }
+  .sidebar-brand{
+    padding:0 20px 20px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+    font-weight:700;font-size:16px;
+  }
+  .sidebar-nav{flex:1;padding:16px 0;display:flex;flex-direction:column;gap:4px}
+  .sidebar-item{
+    display:flex;align-items:center;gap:12px;
+    padding:12px 20px;
+    color:rgba(255,255,255,.7);
+    font-size:14px;font-weight:500;
+    text-align:left;width:100%;
+  }
+  .sidebar-item.active,.sidebar-item:hover{
+    background:var(--navy-light);color:var(--white);
+  }
+  .sidebar-item .tab-icon{font-size:18px}
+  .sidebar-user{
+    padding:16px 20px;border-top:1px solid rgba(255,255,255,.1);
+    display:flex;align-items:center;gap:10px;font-size:13px;
+  }
+  .content-area{flex:1;min-width:0}
+  .app-header{display:none}
+  .desktop-header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:20px 28px;background:var(--white);border-bottom:1px solid var(--border);
+    position:sticky;top:0;z-index:40;
+  }
+  .desktop-header h1{font-size:20px;font-weight:700}
+  .main{padding:24px 28px;padding-bottom:24px}
+  .bottom-tabs{display:none}
+}
+.desktop-header{display:none}
+@media (min-width:768px){.desktop-header{display:flex}}
+
+/* ============================================================
+   Cards / common
+   ============================================================ */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:16px;
+  box-shadow:var(--shadow);
+  margin-bottom:16px;
+}
+.card h2{font-size:15px;font-weight:600;margin-bottom:12px}
+.section-title{
+  font-size:13px;font-weight:600;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.5px;
+  margin:20px 4px 10px;
+}
+.section-title:first-child{margin-top:0}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:var(--tap);
+  padding:0 18px;
+  background:linear-gradient(135deg,#b8336a 0%,#d96a99 100%);
+  color:var(--white);
+  border-radius:var(--radius-sm);
+  font-size:14px;font-weight:600;
+  transition:transform .1s,box-shadow .2s,opacity .2s;
+  box-shadow:0 4px 12px rgba(184,51,106,.25);
+}
+.btn:hover{box-shadow:0 6px 16px rgba(184,51,106,.35)}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-block{width:100%}
+.btn-outline{background:transparent;color:var(--navy);border:1.5px solid var(--navy)}
+.btn-danger{background:var(--red)}
+.btn-success{background:var(--green)}
+.btn-ghost{background:var(--gray-soft);color:var(--text)}
+.btn-sm{min-height:36px;padding:0 12px;font-size:13px}
+
+/* ============================================================
+   Week strip
+   ============================================================ */
+.week-strip{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:8px;margin-bottom:16px;
+}
+.week-day{
+  background:var(--card);border-radius:var(--radius-sm);
+  padding:10px 4px;text-align:center;
+  box-shadow:var(--shadow);
+  min-height:72px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  border:2px solid transparent;
+}
+.week-day.today{border-color:var(--navy)}
+.week-day .dow{font-size:11px;color:var(--muted);font-weight:600}
+.week-day .date{font-size:20px;font-weight:700;font-family:'Mali','Prompt',sans-serif}
+.week-day .status{font-size:14px;line-height:1}
+.week-day.submitted{background:var(--green-soft)}
+.week-day.submitted .status{color:var(--green)}
+.week-day.missed{background:var(--red-soft)}
+.week-day.missed .status{color:var(--red)}
+.week-day.pending .status{color:var(--yellow)}
+.week-day.future{opacity:.6}
+.week-day.future .status{color:var(--gray)}
+
+/* ============================================================
+   Form
+   ============================================================ */
+.form-group{margin-bottom:14px}
+.form-label{
+  display:block;font-size:13px;font-weight:600;
+  margin-bottom:6px;color:var(--text);
+}
+.form-input,.form-textarea{
+  width:100%;
+  min-height:var(--tap);
+  padding:10px 12px;
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  background:var(--white);
+  font-size:15px;
+  transition:border-color .15s;
+}
+.form-input:focus,.form-textarea:focus{outline:none;border-color:var(--navy)}
+.form-textarea{min-height:100px;resize:vertical;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.upload-area{
+  border:2px dashed var(--border);
+  border-radius:var(--radius-sm);
+  padding:24px 12px;
+  text-align:center;
+  cursor:pointer;
+  background:var(--white);
+  transition:border-color .15s,background .15s;
+  min-height:120px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+}
+.upload-area:hover{border-color:var(--navy);background:var(--gray-soft)}
+.upload-area .icon{font-size:28px;color:var(--muted)}
+.upload-area .text{font-size:13px;color:var(--muted)}
+.upload-preview{position:relative;border-radius:var(--radius-sm);overflow:hidden}
+.upload-preview img{width:100%;max-height:280px;object-fit:cover}
+.upload-remove{
+  position:absolute;top:8px;right:8px;
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(0,0,0,.7);color:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;
+}
+#fileInput{display:none}
+
+.submitted-banner{
+  background:var(--green-soft);color:var(--green);
+  padding:14px;border-radius:var(--radius-sm);
+  font-weight:600;font-size:14px;
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+
+/* ============================================================
+   History table
+   ============================================================ */
+.history-list{display:flex;flex-direction:column;gap:10px}
+.history-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px;background:var(--white);
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+}
+.history-thumb{
+  width:56px;height:56px;border-radius:8px;
+  background:var(--gray-soft);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;color:var(--muted);overflow:hidden;flex-shrink:0;
+}
+.history-thumb img{width:100%;height:100%;object-fit:cover}
+.history-info{flex:1;min-width:0}
+.history-info .d{font-size:13px;font-weight:600}
+.history-info .t{font-size:12px;color:var(--muted);margin-top:2px}
+.history-info .desc{
+  font-size:12px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  margin-top:2px;
+}
+
+/* ============================================================
+   Teacher dashboard
+   ============================================================ */
+.stat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;
+}
+.stat-card{
+  background:var(--card);border-radius:var(--radius);
+  padding:14px 10px;text-align:center;box-shadow:var(--shadow);
+}
+.stat-card .num{font-size:26px;font-weight:700;font-family:'Mali','Prompt',sans-serif}
+.stat-card .lbl{font-size:12px;color:var(--muted);margin-top:2px;font-weight:500}
+.stat-card.green .num{color:#10b981}
+.stat-card.red .num{color:#ef4444}
+.stat-card.blue .num{color:#9b6dd7}
+.stat-card{
+  transition:transform .15s,box-shadow .2s;
+}
+.stat-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+
+.progress-wrap{
+  background:var(--card);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow);margin-bottom:16px;
+}
+.progress-wrap .head{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
+.progress-bar{
+  height:10px;background:var(--gray-soft);border-radius:5px;overflow:hidden;
+}
+.progress-fill{
+  height:100%;background:linear-gradient(90deg,#ff9ec7,#b8336a,#9b6dd7);
+  border-radius:5px;transition:width .4s ease;
+}
+
+.student-list{display:flex;flex-direction:column;gap:8px}
+.student-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px;background:var(--card);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow);border:1px solid var(--border);
+  min-height:var(--tap);
+}
+.student-row.submitted{cursor:pointer;transition:transform .1s}
+.student-row.submitted:active{transform:scale(.99)}
+.student-row .name{flex:1;font-weight:600;font-size:14px}
+.student-row .time{font-size:12px;color:var(--muted)}
+.badge{
+  display:inline-block;padding:3px 10px;
+  border-radius:99px;font-size:11px;font-weight:600;
+}
+.badge-green{background:var(--green-soft);color:var(--green)}
+.badge-red{background:var(--red-soft);color:var(--red)}
+.badge-yellow{background:var(--yellow-soft);color:var(--yellow)}
+
+/* Weekly grid */
+.weekly-controls{
+  display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;
+}
+.weekly-controls select{
+  min-height:36px;padding:0 10px;
+  border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  background:var(--white);
+}
+.weekly-wrap{
+  background:var(--card);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.weekly-table{
+  width:100%;min-width:480px;border-collapse:collapse;font-size:13px;
+}
+.weekly-table th,.weekly-table td{
+  padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);
+}
+.weekly-table th{
+  background:var(--gray-soft);font-weight:600;font-size:12px;
+  position:sticky;top:0;
+}
+.weekly-table td.name-cell{
+  text-align:left;font-weight:500;white-space:nowrap;
+  position:sticky;left:0;background:var(--card);z-index:1;
+}
+.weekly-table .cell-ok{color:var(--green);font-weight:700}
+.weekly-table .cell-no{color:var(--red);font-weight:700}
+.weekly-table .cell-off{color:var(--gray)}
+
+.export-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+
+/* ============================================================
+   Modal
+   ============================================================ */
+.modal-backdrop{
+  display:none;
+  position:fixed;inset:0;background:rgba(0,0,0,.6);
+  z-index:100;align-items:flex-end;justify-content:center;
+  padding:0;
+}
+.modal-backdrop.show{display:flex;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+  background:var(--white);
+  width:100%;max-width:520px;
+  border-radius:20px 20px 0 0;
+  max-height:90vh;overflow-y:auto;
+  animation:slideUp .25s;
+}
+@keyframes slideUp{from{transform:translateY(40px)}to{transform:translateY(0)}}
+.modal-head{
+  padding:14px 16px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white);z-index:2;
+}
+.modal-head h3{font-size:16px;font-weight:600}
+.modal-close{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--gray-soft);font-size:18px;
+}
+.modal-body{padding:16px}
+.modal-body img{width:100%;border-radius:var(--radius-sm);margin-bottom:12px}
+.modal-body .meta{font-size:13px;color:var(--muted);margin-bottom:8px}
+.modal-body .desc{font-size:14px;line-height:1.6;white-space:pre-wrap}
+
+@media (min-width:768px){
+  .modal-backdrop{align-items:center;padding:24px}
+  .modal{border-radius:var(--radius)}
+}
+
+/* ============================================================
+   Toast
+   ============================================================ */
+.toast-container{
+  position:fixed;top:max(16px,env(safe-area-inset-top));
+  left:50%;transform:translateX(-50%);
+  z-index:200;display:flex;flex-direction:column;gap:8px;
+  pointer-events:none;width:calc(100% - 32px);max-width:380px;
+}
+.toast{
+  background:var(--navy);color:var(--white);
+  padding:12px 16px;border-radius:var(--radius-sm);
+  font-size:14px;font-weight:500;box-shadow:var(--shadow-lg);
+  animation:toastIn .25s;pointer-events:auto;
+}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+.toast.fade{animation:toastOut .25s forwards}
+@keyframes toastIn{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes toastOut{to{transform:translateY(-20px);opacity:0}}
+
+/* ============================================================
+   Loader / Skeleton
+   ============================================================ */
+.skeleton{
+  background:linear-gradient(90deg,var(--gray-soft) 25%,#e9ebf0 50%,var(--gray-soft) 75%);
+  background-size:200% 100%;
+  animation:shimmer 1.4s infinite;
+  border-radius:var(--radius-sm);
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk-line{height:14px;margin:6px 0}
+.sk-card{height:80px;margin-bottom:10px}
+
+.empty{
+  text-align:center;padding:32px 16px;color:var(--muted);font-size:14px;
+}
+.empty .icon{font-size:36px;margin-bottom:8px;opacity:.5}
+
+/* ============================================================
+   Print styles
+   ============================================================ */
+@media print{
+  body{background:var(--white);color:#000}
+  .app-header,.bottom-tabs,.sidebar,.desktop-header,
+  .export-row,.weekly-controls,#tab-form,#tab-history,.no-print,
+  button{display:none !important}
+  .main{padding:0;max-width:100%}
+  .card,.weekly-wrap,.student-row,.stat-card,.progress-wrap{
+    box-shadow:none;border:1px solid #ccc;break-inside:avoid;
+  }
+  .modal-backdrop{display:none !important}
+  .weekly-table{font-size:11px;min-width:auto}
+  .weekly-table th,.weekly-table td{padding:6px}
+  @page{size:A4 landscape;margin:1cm}
+}
+
+/* hidden util */
+.hidden{display:none !important}
+
+/* views inside student/teacher */
+.view{display:none}
+.view.active{display:block}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
+<div id="screen-login" class="screen active">
+  <div class="login-card">
+    <div class="login-logo">🌸</div>
+    <div class="login-college">วิทยาลัยการอาชีพแกลง</div>
+    <div class="login-title">ระบบรายงานนักศึกษาฝึกงาน</div>
+    <div class="login-subtitle">✨ เข้าสู่ระบบด้วยบัญชี Google ✨</div>
+    <div id="googleBtn"></div>
+    <div id="loginError" class="login-error"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     STUDENT SCREEN
+     ============================================================ -->
+<div id="screen-student" class="screen">
+  <div class="app-shell">
+    <!-- Sidebar (desktop) -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div style="font-size:13px;opacity:.85;font-weight:500;margin-bottom:2px">วิทยาลัยการอาชีพแกลง</div>
+        🌸 รายงานฝึกงาน
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active" data-view="form">
+          <span class="tab-icon">📝</span><span>ส่งงาน</span>
+        </button>
+        <button class="sidebar-item" data-view="history">
+          <span class="tab-icon">📅</span><span>ประวัติ</span>
+        </button>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar" id="stuAvatarDesk"></div>
+        <div style="flex:1;min-width:0">
+          <div id="stuNameDesk" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          <button class="btn-sm" style="background:transparent;color:rgba(255,255,255,.7);padding:0;margin-top:2px" onclick="logout()">ออกจากระบบ</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="content-area">
+      <!-- Mobile header -->
+      <header class="app-header">
+        <div style="min-width:0;flex:1">
+          <div style="font-size:10px;opacity:.75;font-weight:500;letter-spacing:.04em">วิทยาลัยการอาชีพแกลง</div>
+          <div class="title" id="stuName">นักศึกษา</div>
+          <div class="subtitle" id="stuToday"></div>
+        </div>
+        <div class="header-user">
+          <div class="avatar" id="stuAvatar"></div>
+          <button class="logout-btn" onclick="logout()" aria-label="ออกจากระบบ">⎋</button>
+        </div>
+      </header>
+
+      <!-- Desktop header -->
+      <header class="desktop-header">
+        <div>
+          <h1 id="stuViewTitle">ส่งงานวันนี้</h1>
+          <div style="color:var(--muted);font-size:13px;margin-top:2px" id="stuTodayDesk"></div>
+        </div>
+      </header>
+
+      <main class="main">
+        <!-- View: form -->
+        <div class="view active" data-view="form">
+          <div class="section-title">สัปดาห์นี้</div>
+          <div class="week-strip" id="weekStrip"></div>
+
+          <div id="submittedBanner" class="submitted-banner hidden">
+            <span>✓</span><span>คุณส่งงานของวันนี้แล้ว</span>
+          </div>
+
+          <div class="card">
+            <h2 id="formTitle">รายงานวันนี้</h2>
+            <form id="reportForm" autocomplete="off">
+              <div class="form-group">
+                <label class="form-label">รูปภาพประกอบ</label>
+                <input type="file" id="fileInput" accept="image/*">
+                <label for="fileInput" class="upload-area" id="uploadArea">
+                  <div class="icon">📷</div>
+                  <div class="text">แตะเพื่อเลือกรูป (สูงสุด 1MB)</div>
+                </label>
+                <div class="upload-preview hidden" id="uploadPreview">
+                  <img id="previewImg" alt="preview">
+                  <button type="button" class="upload-remove" id="uploadRemove" aria-label="ลบรูป">✕</button>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">เวลาเข้า</label>
+                  <input type="time" class="form-input" id="checkIn" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">เวลาออก</label>
+                  <input type="time" class="form-input" id="checkOut" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">รายละเอียดงานที่ทำ</label>
+                <textarea class="form-textarea" id="desc" placeholder="วันนี้ทำอะไรบ้าง..." required></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-block" id="submitBtn">ส่งรายงาน</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- View: history -->
+        <div class="view" data-view="history">
+          <div class="section-title">ประวัติย้อนหลัง 4 สัปดาห์</div>
+          <div id="historyList" class="history-list"></div>
+        </div>
+      </main>
+
+      <!-- Mobile bottom tabs -->
+      <nav class="bottom-tabs">
+        <button class="tab active" data-view="form">
+          <span class="tab-icon">📝</span><span>ส่งงาน</span>
+        </button>
+        <button class="tab" data-view="history">
+          <span class="tab-icon">📅</span><span>ประวัติ</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TEACHER SCREEN
+     ============================================================ -->
+<div id="screen-teacher" class="screen">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div style="font-size:13px;opacity:.85;font-weight:500;margin-bottom:2px">วิทยาลัยการอาชีพแกลง</div>
+        💐 แดชบอร์ดครู
+      </div>
+      <nav class="sidebar-nav">
+        <button class="sidebar-item active" data-view="overview">
+          <span class="tab-icon">🏠</span><span>ภาพรวม</span>
+        </button>
+        <button class="sidebar-item" data-view="weekly">
+          <span class="tab-icon">📅</span><span>รายสัปดาห์</span>
+        </button>
+        <button class="sidebar-item" data-view="export">
+          <span class="tab-icon">📤</span><span>ส่งออก</span>
+        </button>
+      </nav>
+      <div class="sidebar-user">
+        <div class="avatar" id="tchAvatarDesk"></div>
+        <div style="flex:1;min-width:0">
+          <div id="tchNameDesk" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+          <button class="btn-sm" style="background:transparent;color:rgba(255,255,255,.7);padding:0;margin-top:2px" onclick="logout()">ออกจากระบบ</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="content-area">
+      <header class="app-header">
+        <div style="min-width:0;flex:1">
+          <div style="font-size:10px;opacity:.75;font-weight:500;letter-spacing:.04em">วิทยาลัยการอาชีพแกลง</div>
+          <div class="title" id="tchName">ครู</div>
+          <div class="subtitle" id="tchToday"></div>
+        </div>
+        <div class="header-user">
+          <div class="avatar" id="tchAvatar"></div>
+          <button class="logout-btn" onclick="logout()" aria-label="ออกจากระบบ">⎋</button>
+        </div>
+      </header>
+
+      <header class="desktop-header">
+        <div>
+          <h1 id="tchViewTitle">ภาพรวมวันนี้</h1>
+          <div style="color:var(--muted);font-size:13px;margin-top:2px" id="tchTodayDesk"></div>
+        </div>
+        <button class="btn btn-sm btn-ghost" onclick="loadTeacherData(true)">🔄 รีเฟรช</button>
+      </header>
+
+      <main class="main">
+        <!-- Overview -->
+        <div class="view active" data-view="overview">
+          <div class="stat-grid">
+            <div class="stat-card green">
+              <div class="num" id="statSubmitted">—</div>
+              <div class="lbl">ส่งแล้ว</div>
+            </div>
+            <div class="stat-card red">
+              <div class="num" id="statMissed">—</div>
+              <div class="lbl">ยังไม่ส่ง</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="num" id="statRate">—</div>
+              <div class="lbl">อัตราการส่ง</div>
+            </div>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="head">
+              <span>ความคืบหน้าวันนี้</span>
+              <span id="progressText">0 / 0</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+          </div>
+
+          <div class="section-title">ส่งแล้ว</div>
+          <div id="submittedList" class="student-list"></div>
+
+          <div class="section-title">ยังไม่ส่ง</div>
+          <div id="missedList" class="student-list"></div>
+        </div>
+
+        <!-- Weekly grid -->
+        <div class="view" data-view="weekly">
+          <div class="weekly-controls">
+            <select id="weekSelect"></select>
+          </div>
+          <div class="weekly-wrap">
+            <table class="weekly-table" id="weeklyTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Export -->
+        <div class="view" data-view="export">
+          <div class="card">
+            <h2>ส่งออกข้อมูล</h2>
+            <p style="color:var(--muted);font-size:13px;margin-bottom:14px">
+              เลือกช่วงสัปดาห์ที่ต้องการส่งออก ระบบจะรวมข้อมูลทั้งหมดของช่วงเวลานั้น
+            </p>
+            <div class="weekly-controls">
+              <select id="exportWeekSelect"></select>
+            </div>
+            <div class="export-row">
+              <button class="btn btn-success" onclick="exportCSV()">📥 Export Excel (CSV)</button>
+              <button class="btn btn-outline" onclick="exportPDF()">🖨️ Export PDF</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>จัดการ Drive</h2>
+            <p style="color:var(--muted);font-size:13px;margin-bottom:14px">
+              ระบบจะเก็บรูปทั้งหมดไว้ใน Google Drive ของครู (โฟลเดอร์ "รายงานฝึกงาน-วิทยาลัยการอาชีพแกลง")
+              กดปุ่มข้างล่างเพื่อแชร์สิทธิ์อัปโหลดให้นักศึกษาใหม่ที่เพิ่งเพิ่มเข้ามาใน Sheet
+            </p>
+            <button class="btn btn-outline" onclick="manualSyncPermissions()">🔄 ซิงค์สิทธิ์โฟลเดอร์</button>
+          </div>
+        </div>
+      </main>
+
+      <nav class="bottom-tabs">
+        <button class="tab active" data-view="overview">
+          <span class="tab-icon">🏠</span><span>ภาพรวม</span>
+        </button>
+        <button class="tab" data-view="weekly">
+          <span class="tab-icon">📅</span><span>รายสัปดาห์</span>
+        </button>
+        <button class="tab" data-view="export">
+          <span class="tab-icon">📤</span><span>ส่งออก</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modalTitle">รายละเอียด</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ============================================================
+   CONFIG — แทนค่าก่อนใช้
+   ============================================================ */
+const CONFIG = {
+    SHEET_ID: "1-KUPWqB7nsqiC3kyRJ4iomJdI63V56EjiFvodHKrplg",
+  API_KEY:  "AIzaSyDXdV63QJQzmMD_bzhY0HqXX3qRSWRXIfc",
+  OAUTH_CLIENT_ID: "87120017438-su8fm2arb3plqej6mt5kf0ijtjk13lqj.apps.googleusercontent.com"
+};
+
+const SHEETS_BASE = "https://sheets.googleapis.com/v4/spreadsheets";
+const DRIVE_BASE  = "https://www.googleapis.com/drive/v3";
+const DRIVE_UPLOAD = "https://www.googleapis.com/upload/drive/v3/files";
+const SCOPES = "https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file";
+const ROOT_FOLDER_NAME = "รายงานฝึกงาน-วิทยาลัยการอาชีพแกลง";
+const IMG_CACHE = {}; // file_id -> blob URL
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  user: null,           // { id, name, role, email }
+  token: null,          // OAuth access token
+  tokenExpiry: 0,
+  users: [],            // all users from sheet
+  reports: [],          // all reports
+  settings: { work_days: "1,2,3,4,5" },
+  tokenClient: null,
+};
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+const $ = (s, p=document) => p.querySelector(s);
+const $$ = (s, p=document) => Array.from(p.querySelectorAll(s));
+
+function todayStr(){ return formatDate(new Date()); }
+function formatDate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function parseDate(s){
+  if(!s) return null;
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function thaiDate(d){
+  if(typeof d==='string') d=parseDate(d);
+  if(!d) return '';
+  const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+function thaiFullDate(d){
+  if(typeof d==='string') d=parseDate(d);
+  if(!d) return '';
+  const dows=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  return `วัน${dows[d.getDay()]}ที่ ${thaiDate(d)}`;
+}
+function startOfWeek(d){
+  // Monday-start week
+  d = new Date(d);
+  const day = d.getDay();
+  const diff = (day===0?-6:1)-day;
+  d.setDate(d.getDate()+diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function isSameDay(a,b){ return formatDate(a)===formatDate(b); }
+function getWorkDays(){
+  return (state.settings.work_days||'1,2,3,4,5').split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+}
+function isWorkDay(d){
+  return getWorkDays().includes(d.getDay());
+}
+function escapeHtml(s){
+  if(s==null) return '';
+  return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+}
+function uid(){ return 'r_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); }
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function toast(msg, type='info', ms=3000){
+  const c = $('#toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(()=>{ el.classList.add('fade'); setTimeout(()=>el.remove(),250); }, ms);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function openModal(title, html){
+  $('#modalTitle').textContent = title;
+  $('#modalBody').innerHTML = html;
+  $('#modal').classList.add('show');
+}
+function closeModal(){ $('#modal').classList.remove('show'); }
+function closeModalOnBackdrop(e){ if(e.target.id==='modal') closeModal(); }
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+function showScreen(id){
+  $$('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+function showLoginError(msg){
+  const el = $('#loginError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearLoginError(){
+  $('#loginError').classList.remove('show');
+}
+
+function initGoogleAuth(){
+  if(!window.google || !window.google.accounts){
+    setTimeout(initGoogleAuth, 200);
+    return;
+  }
+
+  // Use access token flow only (avoids COOP/postMessage issues)
+  state.tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CONFIG.OAUTH_CLIENT_ID,
+    scope: SCOPES + ' email profile openid',
+    prompt: 'consent',
+    callback: handleTokenResponse,
+  });
+
+  // Render custom Google sign-in button
+  const btnHost = $('#googleBtn');
+  btnHost.innerHTML = `
+    <button id="customGoogleBtn" style="
+      display:inline-flex;align-items:center;justify-content:center;gap:10px;
+      width:300px;min-height:44px;padding:0 18px;
+      background:#fff;color:#3c4043;border:1px solid #dadce0;
+      border-radius:4px;font-size:14px;font-weight:600;
+      cursor:pointer;font-family:'Roboto',sans-serif;
+      box-shadow:0 1px 2px rgba(0,0,0,.1);
+    ">
+      <svg width="18" height="18" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+      </svg>
+      <span>ลงชื่อเข้าใช้ด้วย Google</span>
+    </button>`;
+  $('#customGoogleBtn').onclick = ()=>{
+    clearLoginError();
+    state.tokenClient.requestAccessToken({ prompt: 'consent' });
+  };
+
+  // Try restore session
+  restoreSession();
+}
+
+async function handleTokenResponse(resp){
+  clearLoginError();
+  if(resp.error){
+    showLoginError('เข้าสู่ระบบล้มเหลว: '+(resp.error_description||resp.error));
+    return;
+  }
+  if(!resp.access_token){
+    showLoginError('ไม่ได้รับ access token');
+    return;
+  }
+  try{
+    state.token = resp.access_token;
+    state.tokenExpiry = Date.now() + (resp.expires_in||3600)*1000 - 60000;
+
+    // Fetch user info using access token
+    toast('กำลังตรวจสอบสิทธิ์...', 'info', 1500);
+    const uiRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { 'Authorization': 'Bearer '+resp.access_token }
+    });
+    if(!uiRes.ok) throw new Error('ดึงข้อมูลผู้ใช้ล้มเหลว');
+    const info = await uiRes.json();
+    const email = (info.email||'').toLowerCase();
+    const name = info.name || email;
+    const picture = info.picture || '';
+
+    // Verify in users sheet
+    await loadUsers();
+    const user = state.users.find(u => (u.email||'').toLowerCase() === email);
+    if(!user){
+      showLoginError('ไม่มีสิทธิ์เข้าใช้งาน — กรุณาติดต่อผู้ดูแลระบบ');
+      return;
+    }
+    state.user = { ...user, picture, displayName: name };
+    saveSession();
+    enterApp();
+  }catch(e){
+    console.error(e);
+    showLoginError('เข้าสู่ระบบล้มเหลว: '+e.message);
+  }
+}
+
+function saveSession(){
+  try{
+    localStorage.setItem('iship_session', JSON.stringify({
+      user: state.user,
+      token: state.token,
+      tokenExpiry: state.tokenExpiry,
+    }));
+  }catch{}
+}
+
+function restoreSession(){
+  try{
+    const raw = localStorage.getItem('iship_session');
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(!s.user) return;
+    state.user = s.user;
+    state.token = s.token;
+    state.tokenExpiry = s.tokenExpiry || 0;
+    enterApp();
+    // refresh token silently if needed
+    if(!state.token || Date.now() > state.tokenExpiry){
+      if(state.tokenClient) state.tokenClient.requestAccessToken({ prompt: '' });
+    }
+  }catch{}
+}
+
+function logout(){
+  try{
+    if(state.token) google.accounts.oauth2.revoke(state.token, ()=>{});
+    google.accounts.id.disableAutoSelect();
+  }catch{}
+  localStorage.removeItem('iship_session');
+  state.user = null; state.token = null;
+  showScreen('#screen-login');
+}
+
+function enterApp(){
+  if(!state.user) return;
+  if(state.user.role === 'teacher'){
+    setupTeacherUI();
+    showScreen('#screen-teacher');
+    loadTeacherData();
+  }else{
+    setupStudentUI();
+    showScreen('#screen-student');
+    loadStudentData();
+  }
+}
+
+/* ============================================================
+   SHEETS API
+   ============================================================ */
+async function sheetsRead(range){
+  const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?key=${CONFIG.API_KEY}`;
+  const res = await fetch(url);
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error(`Sheets read failed: ${res.status} ${t.slice(0,150)}`);
+  }
+  const data = await res.json();
+  return data.values || [];
+}
+
+async function sheetsAppend(range, rows){
+  if(!state.token) throw new Error('ไม่มี access token — กรุณาเข้าสู่ระบบใหม่');
+  const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{
+      'Authorization':`Bearer ${state.token}`,
+      'Content-Type':'application/json',
+    },
+    body: JSON.stringify({ values: rows }),
+  });
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error(`Sheets append failed: ${res.status} ${t.slice(0,150)}`);
+  }
+  return res.json();
+}
+
+/* ============================================================
+   DRIVE API
+   ============================================================ */
+async function driveFetch(path, opts={}){
+  if(!state.token) throw new Error('ไม่มี access token');
+  const url = path.startsWith('http') ? path : `${DRIVE_BASE}${path}`;
+  const res = await fetch(url, {
+    ...opts,
+    headers:{ 'Authorization':`Bearer ${state.token}`, ...(opts.headers||{}) },
+  });
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error(`Drive ${res.status}: ${t.slice(0,200)}`);
+  }
+  return res;
+}
+
+async function driveFindFolder(name, parentId){
+  const q = parentId
+    ? `name='${name.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`
+    : `name='${name.replace(/'/g,"\\'")}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const url = `/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=1`;
+  const res = await driveFetch(url);
+  const data = await res.json();
+  return (data.files && data.files[0]) ? data.files[0].id : null;
+}
+
+async function driveCreateFolder(name, parentId){
+  const body = {
+    name, mimeType:'application/vnd.google-apps.folder',
+    ...(parentId ? { parents:[parentId] } : {}),
+  };
+  const res = await driveFetch('/files?fields=id,name', {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json();
+  return data.id;
+}
+
+async function driveEnsureFolder(name, parentId){
+  return (await driveFindFolder(name, parentId)) || (await driveCreateFolder(name, parentId));
+}
+
+async function driveUploadImage(dataUrl, filename, folderId){
+  // Convert data URL to blob
+  const [meta, b64] = dataUrl.split(',');
+  const mime = (meta.match(/data:([^;]+)/)||[])[1] || 'image/jpeg';
+  const bin = atob(b64);
+  const arr = new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+  const blob = new Blob([arr], {type:mime});
+
+  // Multipart upload
+  const boundary = '-------foo'+Date.now();
+  const metadata = { name: filename, parents:[folderId] };
+  const body = new Blob([
+    `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n`,
+    JSON.stringify(metadata),
+    `\r\n--${boundary}\r\nContent-Type: ${mime}\r\n\r\n`,
+    blob,
+    `\r\n--${boundary}--`,
+  ]);
+  const res = await driveFetch(`${DRIVE_UPLOAD}?uploadType=multipart&fields=id,name`,{
+    method:'POST',
+    headers:{ 'Content-Type':`multipart/related; boundary=${boundary}` },
+    body,
+  });
+  const data = await res.json();
+  return data.id;
+}
+
+async function driveSharePermission(fileId, email, role='writer'){
+  // role: 'writer' for upload, 'reader' for view-only
+  try{
+    await driveFetch(`/files/${fileId}/permissions?sendNotificationEmail=false`,{
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ type:'user', role, emailAddress: email }),
+    });
+    return true;
+  }catch(e){
+    console.warn('share fail for',email,e.message);
+    return false;
+  }
+}
+
+async function driveFetchImage(fileId){
+  if(IMG_CACHE[fileId]) return IMG_CACHE[fileId];
+  if(!state.token) return '';
+  try{
+    const res = await fetch(`${DRIVE_BASE}/files/${fileId}?alt=media`,{
+      headers:{ 'Authorization':`Bearer ${state.token}` },
+    });
+    if(!res.ok) throw new Error('fetch image '+res.status);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    IMG_CACHE[fileId] = url;
+    return url;
+  }catch(e){
+    console.warn('image fetch fail:',fileId,e.message);
+    return '';
+  }
+}
+
+/* ============================================================
+   SHEETS write helpers (update)
+   ============================================================ */
+async function sheetsUpdateCell(range, value){
+  if(!state.token) throw new Error('ไม่มี access token');
+  const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const res = await fetch(url,{
+    method:'PUT',
+    headers:{ 'Authorization':`Bearer ${state.token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ values:[[value]] }),
+  });
+  if(!res.ok){ const t=await res.text(); throw new Error('Sheets update '+res.status+': '+t.slice(0,150)); }
+  return res.json();
+}
+
+function rowsToObjects(rows){
+  if(!rows || rows.length<2) return [];
+  const headers = rows[0].map(h=>String(h||'').trim());
+  return rows.slice(1).map(r=>{
+    const o = {};
+    headers.forEach((h,i)=>{ o[h] = r[i]!=null ? String(r[i]) : ''; });
+    return o;
+  });
+}
+
+async function loadUsers(){
+  const rows = await sheetsRead('users!A1:Z');
+  state.users = rowsToObjects(rows);
+  return state.users;
+}
+async function loadReports(){
+  const rows = await sheetsRead('reports!A1:Z');
+  state.reports = rowsToObjects(rows);
+  return state.reports;
+}
+async function loadSettings(){
+  try{
+    const rows = await sheetsRead('settings!A1:Z');
+    const obj = rowsToObjects(rows);
+    obj.forEach(o=>{ if(o.key) state.settings[o.key] = o.value; });
+  }catch(e){ /* settings is optional */ }
+  return state.settings;
+}
+
+/* ============================================================
+   FOLDER MANAGEMENT
+   ============================================================ */
+
+// Ensure root folder exists in teacher's Drive. Returns folder ID.
+// Called by teacher only (creates folder in their Drive).
+async function ensureRootFolderAsTeacher(){
+  let folderId = state.settings.drive_folder_id;
+  if(folderId){
+    // verify still exists
+    try{
+      const res = await driveFetch(`/files/${folderId}?fields=id,trashed`);
+      const d = await res.json();
+      if(!d.trashed) return folderId;
+    }catch(e){ /* fall through to create */ }
+  }
+  // Create root folder in teacher's Drive
+  folderId = await driveCreateFolder(ROOT_FOLDER_NAME, null);
+  // Save to settings
+  await saveSettingDriveFolder(folderId);
+  state.settings.drive_folder_id = folderId;
+  return folderId;
+}
+
+// Save drive_folder_id to settings tab
+async function saveSettingDriveFolder(folderId){
+  const rows = await sheetsRead('settings!A1:Z');
+  const idx = rows.findIndex(r => (r[0]||'').toLowerCase()==='drive_folder_id');
+  if(idx >= 0){
+    await sheetsUpdateCell(`settings!B${idx+1}`, folderId);
+  }else{
+    await sheetsAppend('settings!A1', [['drive_folder_id', folderId]]);
+  }
+}
+
+// Sync permissions: share root folder with all users in users tab
+async function syncFolderPermissions(){
+  const folderId = state.settings.drive_folder_id;
+  if(!folderId) throw new Error('ยังไม่ได้ตั้ง drive_folder_id');
+  if(!state.users.length) await loadUsers();
+  // Get current permissions
+  const res = await driveFetch(`/files/${folderId}/permissions?fields=permissions(id,emailAddress,role)`);
+  const data = await res.json();
+  const existing = new Set((data.permissions||[])
+    .map(p => (p.emailAddress||'').toLowerCase())
+    .filter(Boolean));
+  let added=0, failed=0;
+  for(const u of state.users){
+    const email = (u.email||'').toLowerCase();
+    if(!email || existing.has(email)) continue;
+    const ok = await driveSharePermission(folderId, email, 'writer');
+    if(ok) added++; else failed++;
+  }
+  return { added, failed, total: state.users.length };
+}
+
+// Ensure student's subfolder exists. Used at submit time.
+async function ensureStudentFolder(){
+  const rootId = state.settings.drive_folder_id;
+  if(!rootId) throw new Error('ยังไม่ได้ตั้งค่า Drive folder — กรุณาให้ครู login เพื่อ setup ระบบ');
+  const name = `${state.user.id} - ${state.user.name}`;
+  return await driveEnsureFolder(name, rootId);
+}
+
+/* ============================================================
+   IMAGE COMPRESS
+   ============================================================ */
+async function compressImage(file, maxBytes=1024*1024){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let {width,height} = img;
+        let scale = 1;
+        // Reduce dimensions first
+        const maxDim = 1280;
+        if(width>maxDim || height>maxDim){
+          scale = Math.min(maxDim/width, maxDim/height);
+          width = Math.round(width*scale);
+          height = Math.round(height*scale);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let quality = 0.85;
+        let dataUrl = canvas.toDataURL('image/jpeg', quality);
+        // Iteratively lower quality / size
+        let safety = 12;
+        while(dataUrl.length > maxBytes*1.37 && safety-->0){
+          if(quality > 0.4){
+            quality -= 0.1;
+          }else{
+            width = Math.round(width*0.85);
+            height = Math.round(height*0.85);
+            canvas.width = width; canvas.height = height;
+            ctx.drawImage(img, 0, 0, width, height);
+            quality = 0.7;
+          }
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ============================================================
+   STUDENT
+   ============================================================ */
+let currentUpload = null;
+
+function setupStudentUI(){
+  const u = state.user;
+  $('#stuName').textContent = u.name;
+  $('#stuNameDesk').textContent = u.name;
+  $('#stuToday').textContent = thaiFullDate(new Date());
+  $('#stuTodayDesk').textContent = thaiFullDate(new Date());
+
+  // avatar
+  const initials = (u.name||'?').trim().slice(0,1).toUpperCase();
+  [$('#stuAvatar'), $('#stuAvatarDesk')].forEach(av=>{
+    if(u.picture){ av.innerHTML = `<img src="${escapeHtml(u.picture)}" alt="">`; }
+    else av.textContent = initials;
+  });
+
+  // tabs + sidebar nav
+  $$('#screen-student .tab, #screen-student .sidebar-item').forEach(btn=>{
+    btn.onclick = ()=> switchStudentView(btn.dataset.view);
+  });
+
+  // form
+  setupStudentForm();
+}
+
+function switchStudentView(view){
+  $$('#screen-student .view').forEach(v=> v.classList.toggle('active', v.dataset.view===view));
+  $$('#screen-student .tab, #screen-student .sidebar-item').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
+  $('#stuViewTitle').textContent = view==='form' ? 'ส่งงานวันนี้' : 'ประวัติย้อนหลัง';
+}
+
+function setupStudentForm(){
+  const fileInput = $('#fileInput');
+  const uploadArea = $('#uploadArea');
+  const preview = $('#uploadPreview');
+  const previewImg = $('#previewImg');
+  const removeBtn = $('#uploadRemove');
+
+  fileInput.onchange = async ()=>{
+    const f = fileInput.files[0];
+    if(!f) return;
+    if(!f.type.startsWith('image/')){ toast('ไฟล์ต้องเป็นรูปภาพ','error'); return; }
+    try{
+      uploadArea.querySelector('.text').textContent = 'กำลังบีบอัดรูป...';
+      const dataUrl = await compressImage(f);
+      currentUpload = dataUrl;
+      previewImg.src = dataUrl;
+      preview.classList.remove('hidden');
+      uploadArea.classList.add('hidden');
+    }catch(e){
+      toast('บีบอัดรูปล้มเหลว','error');
+      uploadArea.querySelector('.text').textContent = 'แตะเพื่อเลือกรูป (สูงสุด 1MB)';
+    }
+  };
+  removeBtn.onclick = ()=>{
+    currentUpload = null;
+    fileInput.value = '';
+    preview.classList.add('hidden');
+    uploadArea.classList.remove('hidden');
+    uploadArea.querySelector('.text').textContent = 'แตะเพื่อเลือกรูป (สูงสุด 1MB)';
+  };
+
+  $('#reportForm').onsubmit = onSubmitReport;
+}
+
+async function loadStudentData(){
+  renderWeekStripSkeleton();
+  try{
+    await Promise.all([ loadReports(), loadSettings() ]);
+    renderWeekStrip();
+    renderStudentForm();
+    renderHistory();
+  }catch(e){
+    console.error(e);
+    toast('โหลดข้อมูลล้มเหลว: '+e.message,'error',5000);
+  }
+}
+
+function renderWeekStripSkeleton(){
+  const el = $('#weekStrip');
+  el.innerHTML = Array.from({length:5}).map(()=>'<div class="skeleton sk-card"></div>').join('');
+}
+
+function renderWeekStrip(){
+  const el = $('#weekStrip');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const monday = startOfWeek(today);
+  const workDays = getWorkDays();
+  const dows = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+  // Build only the work days within Mon-Fri
+  let html = '';
+  for(let i=0;i<5;i++){
+    const d = addDays(monday, i);
+    const ds = formatDate(d);
+    const isToday = isSameDay(d, today);
+    const inWork = workDays.includes(d.getDay());
+    const myReports = state.reports.filter(r =>
+      r.student_id===state.user.id && r.date===ds
+    );
+    const submitted = myReports.length>0;
+    let cls='', icon='—';
+    if(!inWork){ cls='future'; icon='—'; }
+    else if(submitted){ cls='submitted'; icon='✓'; }
+    else if(isToday){ cls='pending today'; icon='⏳'; }
+    else if(d < today){ cls='missed'; icon='✗'; }
+    else { cls='future'; icon='—'; }
+    html += `
+      <div class="week-day ${cls}">
+        <div class="dow">${dows[d.getDay()]}</div>
+        <div class="date">${d.getDate()}</div>
+        <div class="status">${icon}</div>
+      </div>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderStudentForm(){
+  const ds = todayStr();
+  const today = new Date();
+  const banner = $('#submittedBanner');
+  const form = $('#reportForm');
+  const mine = state.reports.filter(r => r.student_id===state.user.id && r.date===ds);
+
+  if(!isWorkDay(today)){
+    banner.classList.remove('hidden');
+    banner.querySelector('span:last-child').textContent = 'วันนี้เป็นวันหยุด ไม่ต้องส่งรายงาน';
+    [...form.elements].forEach(el=> el.disabled=true);
+    return;
+  }
+
+  if(mine.length>0){
+    const r = mine[mine.length-1];
+    banner.classList.remove('hidden');
+    banner.querySelector('span:last-child').textContent =
+      `ส่งงานวันนี้แล้ว: ${r.check_in||'-'} - ${r.check_out||'-'}`;
+    $('#checkIn').value = r.check_in || '';
+    $('#checkOut').value = r.check_out || '';
+    $('#desc').value = r.description || '';
+    const ref = r.image_base64 || '';
+    if(ref.startsWith('data:')){
+      currentUpload = ref;
+      $('#previewImg').src = ref;
+      $('#uploadPreview').classList.remove('hidden');
+      $('#uploadArea').classList.add('hidden');
+    }else if(ref.startsWith('drive:')){
+      $('#uploadPreview').classList.remove('hidden');
+      $('#uploadArea').classList.add('hidden');
+      const id = ref.slice(6);
+      driveFetchImage(id).then(url=>{ if(url) $('#previewImg').src = url; });
+    }
+    [...form.elements].forEach(el=> el.disabled=true);
+  }else{
+    banner.classList.add('hidden');
+    [...form.elements].forEach(el=> el.disabled=false);
+  }
+}
+
+async function onSubmitReport(e){
+  e.preventDefault();
+  const ci = $('#checkIn').value;
+  const co = $('#checkOut').value;
+  const desc = $('#desc').value.trim();
+  if(!ci || !co){ toast('กรุณากรอกเวลาเข้า-ออก','error'); return; }
+  if(!desc){ toast('กรุณากรอกรายละเอียดงาน','error'); return; }
+  if(co <= ci){ toast('เวลาออกต้องมากกว่าเวลาเข้า','error'); return; }
+
+  const btn = $('#submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'กำลังส่ง...';
+
+  try{
+    // ensure token
+    if(!state.token || Date.now() > state.tokenExpiry){
+      await new Promise((resolve,reject)=>{
+        state.tokenClient.callback = (resp)=>{
+          if(resp.access_token){
+            state.token = resp.access_token;
+            state.tokenExpiry = Date.now() + (resp.expires_in||3600)*1000 - 60000;
+            saveSession();
+            resolve();
+          }else reject(new Error('ไม่ได้รับ access token'));
+        };
+        state.tokenClient.requestAccessToken({ prompt:'' });
+      });
+    }
+
+    // Upload image to Drive (if any)
+    let imageRef = '';
+    if(currentUpload && currentUpload.startsWith('data:')){
+      btn.textContent = 'กำลังอัปโหลดรูป...';
+      const folderId = await ensureStudentFolder();
+      const filename = `${todayStr()}.jpg`;
+      const fileId = await driveUploadImage(currentUpload, filename, folderId);
+      imageRef = 'drive:'+fileId;
+      btn.textContent = 'กำลังบันทึก...';
+    }
+
+    const row = [[
+      uid(),
+      state.user.id,
+      todayStr(),
+      ci,
+      co,
+      desc,
+      imageRef,
+      new Date().toISOString(),
+    ]];
+    await sheetsAppend('reports!A1', row);
+    toast('ส่งรายงานสำเร็จ','success');
+    await loadReports();
+    renderWeekStrip();
+    renderStudentForm();
+    renderHistory();
+  }catch(err){
+    console.error(err);
+    toast('ส่งล้มเหลว: '+err.message,'error',5000);
+    btn.disabled = false;
+    btn.textContent = 'ส่งรายงาน';
+  }
+}
+
+function imageRefToTag(ref, thumbStyle=false){
+  // Returns HTML for image thumb. Handles legacy base64 + new drive: format.
+  if(!ref) return '';
+  if(ref.startsWith('data:')){
+    return `<img src="${escapeHtml(ref)}">`;
+  }
+  if(ref.startsWith('drive:')){
+    const id = ref.slice(6);
+    return `<img data-drive-id="${escapeHtml(id)}" alt="">`;
+  }
+  return '';
+}
+
+async function loadDriveImages(rootEl){
+  const imgs = $$('img[data-drive-id]', rootEl);
+  for(const img of imgs){
+    const id = img.dataset.driveId;
+    if(!id) continue;
+    const url = await driveFetchImage(id);
+    if(url) img.src = url;
+    img.removeAttribute('data-drive-id');
+  }
+}
+
+function renderHistory(){
+  const el = $('#historyList');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const monday = startOfWeek(today);
+  const fourWeeksAgo = addDays(monday, -7*3); // 4 weeks including current
+  const items = state.reports
+    .filter(r => r.student_id===state.user.id)
+    .filter(r => {
+      const d = parseDate(r.date);
+      return d && d >= fourWeeksAgo;
+    })
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+
+  if(items.length===0){
+    el.innerHTML = `<div class="empty"><div class="icon">📭</div><div>ยังไม่มีประวัติการส่งงาน</div></div>`;
+    return;
+  }
+  el.innerHTML = items.map(r=>{
+    const ref = r.image_base64 || r.image_url || '';
+    const thumb = imageRefToTag(ref) || '📄';
+    return `
+      <div class="history-item" data-rid="${escapeHtml(r.id||'')}">
+        <div class="history-thumb">${thumb}</div>
+        <div class="history-info">
+          <div class="d">${thaiDate(r.date)}</div>
+          <div class="t">⏰ ${escapeHtml(r.check_in||'-')} - ${escapeHtml(r.check_out||'-')}</div>
+          <div class="desc">${escapeHtml(r.description||'')}</div>
+        </div>
+      </div>`;
+  }).join('');
+  $$('#historyList .history-item').forEach(it=>{
+    it.onclick = ()=>{
+      const r = state.reports.find(x=>x.id===it.dataset.rid);
+      if(r) showReportModal(r, state.user.name);
+    };
+  });
+  loadDriveImages(el);
+}
+
+function showReportModal(r, studentName){
+  const ref = r.image_base64 || r.image_url || '';
+  const imgTag = imageRefToTag(ref);
+  openModal(studentName || 'รายละเอียด', `
+    ${imgTag}
+    <div class="meta">📅 ${thaiFullDate(r.date)}</div>
+    <div class="meta">⏰ เวลา ${escapeHtml(r.check_in||'-')} - ${escapeHtml(r.check_out||'-')}</div>
+    <div class="desc">${escapeHtml(r.description||'')}</div>
+  `);
+  loadDriveImages($('#modalBody'));
+}
+
+/* ============================================================
+   TEACHER
+   ============================================================ */
+function setupTeacherUI(){
+  const u = state.user;
+  $('#tchName').textContent = u.name;
+  $('#tchNameDesk').textContent = u.name;
+  $('#tchToday').textContent = thaiFullDate(new Date());
+  $('#tchTodayDesk').textContent = thaiFullDate(new Date());
+
+  const initials = (u.name||'?').trim().slice(0,1).toUpperCase();
+  [$('#tchAvatar'), $('#tchAvatarDesk')].forEach(av=>{
+    if(u.picture) av.innerHTML = `<img src="${escapeHtml(u.picture)}" alt="">`;
+    else av.textContent = initials;
+  });
+
+  $$('#screen-teacher .tab, #screen-teacher .sidebar-item').forEach(btn=>{
+    btn.onclick = ()=> switchTeacherView(btn.dataset.view);
+  });
+}
+
+function switchTeacherView(view){
+  $$('#screen-teacher .view').forEach(v=> v.classList.toggle('active', v.dataset.view===view));
+  $$('#screen-teacher .tab, #screen-teacher .sidebar-item').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
+  const titles = { overview:'ภาพรวมวันนี้', weekly:'รายงานรายสัปดาห์', export:'ส่งออกข้อมูล' };
+  $('#tchViewTitle').textContent = titles[view] || '';
+}
+
+async function loadTeacherData(refresh=false){
+  renderTeacherSkeleton();
+  try{
+    await Promise.all([ loadUsers(), loadReports(), loadSettings() ]);
+    renderOverview();
+    renderWeeklyControls();
+    renderWeeklyGrid();
+
+    // First-time setup: create Drive folder if missing
+    if(!state.settings.drive_folder_id){
+      toast('กำลังตั้งค่า Drive folder ครั้งแรก...','info',3000);
+      try{
+        await ensureRootFolderAsTeacher();
+        toast('สร้างโฟลเดอร์เรียบร้อย กำลังแชร์สิทธิ์...','info',3000);
+        const r = await syncFolderPermissions();
+        toast(`แชร์โฟลเดอร์ให้ผู้ใช้แล้ว ${r.added}/${r.total}`,'success',4000);
+      }catch(e){
+        console.error(e);
+        toast('Setup Drive ล้มเหลว: '+e.message,'error',6000);
+      }
+    }
+
+    if(refresh) toast('อัปเดตข้อมูลแล้ว','success');
+  }catch(e){
+    console.error(e);
+    toast('โหลดข้อมูลล้มเหลว: '+e.message,'error',5000);
+  }
+}
+
+async function manualSyncPermissions(){
+  if(!state.settings.drive_folder_id){
+    toast('ยังไม่มี Drive folder','error');
+    return;
+  }
+  toast('กำลังซิงค์สิทธิ์...','info',2000);
+  try{
+    await loadUsers();
+    const r = await syncFolderPermissions();
+    toast(`เพิ่มสิทธิ์ใหม่ ${r.added} คน (ผู้ใช้ทั้งหมด ${r.total})`,'success',4000);
+  }catch(e){
+    console.error(e);
+    toast('ซิงค์ล้มเหลว: '+e.message,'error',5000);
+  }
+}
+
+function renderTeacherSkeleton(){
+  $('#statSubmitted').textContent = '—';
+  $('#statMissed').textContent = '—';
+  $('#statRate').textContent = '—';
+  $('#submittedList').innerHTML = '<div class="skeleton sk-card"></div><div class="skeleton sk-card"></div>';
+  $('#missedList').innerHTML = '<div class="skeleton sk-card"></div>';
+}
+
+function renderOverview(){
+  const ds = todayStr();
+  const today = new Date();
+  const students = state.users.filter(u=> (u.role||'').toLowerCase()==='student');
+  const todayReports = state.reports.filter(r=> r.date===ds);
+
+  // map by student
+  const reportByStu = {};
+  todayReports.forEach(r=>{ reportByStu[r.student_id] = r; });
+
+  const submitted = students.filter(s=> reportByStu[s.id]);
+  const missed    = students.filter(s=> !reportByStu[s.id]);
+
+  $('#statSubmitted').textContent = submitted.length;
+  $('#statMissed').textContent = missed.length;
+  const rate = students.length ? Math.round(submitted.length*100/students.length) : 0;
+  $('#statRate').textContent = rate+'%';
+
+  $('#progressText').textContent = `${submitted.length} / ${students.length}`;
+  $('#progressFill').style.width = rate+'%';
+
+  // Submitted list
+  $('#submittedList').innerHTML = submitted.length ? submitted.map(s=>{
+    const r = reportByStu[s.id];
+    return `
+      <div class="student-row submitted" data-sid="${escapeHtml(s.id)}">
+        <div class="avatar" style="background:var(--green-soft);color:var(--green)">${escapeHtml((s.name||'?').slice(0,1))}</div>
+        <div class="name">${escapeHtml(s.name||'')}</div>
+        <div class="time">⏰ ${escapeHtml(r.check_in||'-')} - ${escapeHtml(r.check_out||'-')}</div>
+        <span class="badge badge-green">✓</span>
+      </div>`;
+  }).join('') : `<div class="empty"><div>ยังไม่มีใครส่งงานวันนี้</div></div>`;
+
+  $$('#submittedList .student-row').forEach(row=>{
+    row.onclick = ()=>{
+      const s = students.find(x=>x.id===row.dataset.sid);
+      const r = reportByStu[row.dataset.sid];
+      if(r) showReportModal(r, s?.name||'');
+    };
+  });
+
+  // Missed list
+  if(!isWorkDay(today)){
+    $('#missedList').innerHTML = `<div class="empty"><div>วันนี้เป็นวันหยุด</div></div>`;
+  }else{
+    $('#missedList').innerHTML = missed.length ? missed.map(s=>`
+      <div class="student-row">
+        <div class="avatar" style="background:var(--red-soft);color:var(--red)">${escapeHtml((s.name||'?').slice(0,1))}</div>
+        <div class="name">${escapeHtml(s.name||'')}</div>
+        <span class="badge badge-red">ยังไม่ส่ง</span>
+      </div>
+    `).join('') : `<div class="empty"><div>🎉 ส่งครบทุกคนแล้ว!</div></div>`;
+  }
+}
+
+/* ---- Weekly Grid ---- */
+function getRecentWeeks(n=4){
+  const weeks = [];
+  const monday = startOfWeek(new Date());
+  for(let i=0;i<n;i++){
+    const s = addDays(monday, -7*i);
+    weeks.push(s);
+  }
+  return weeks;
+}
+
+function renderWeeklyControls(){
+  const weeks = getRecentWeeks(4);
+  const opts = weeks.map((w,i)=>{
+    const end = addDays(w,4);
+    return `<option value="${formatDate(w)}">${thaiDate(w)} – ${thaiDate(end)}${i===0?' (สัปดาห์นี้)':''}</option>`;
+  }).join('');
+  $('#weekSelect').innerHTML = opts;
+  $('#exportWeekSelect').innerHTML = opts;
+  $('#weekSelect').onchange = renderWeeklyGrid;
+}
+
+function renderWeeklyGrid(){
+  const startStr = $('#weekSelect').value;
+  const monday = parseDate(startStr) || startOfWeek(new Date());
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dows = ['จ','อ','พ','พฤ','ศ'];
+  const students = state.users.filter(u=> (u.role||'').toLowerCase()==='student');
+  const workDays = getWorkDays();
+
+  let thead = `<tr><th class="name-cell" style="text-align:left">นักศึกษา</th>`;
+  for(let i=0;i<5;i++){
+    const d = addDays(monday, i);
+    thead += `<th>${dows[i]}<br><span style="font-weight:400;font-size:11px;color:var(--muted)">${d.getDate()}/${d.getMonth()+1}</span></th>`;
+  }
+  thead += `</tr>`;
+
+  let tbody = '';
+  students.forEach(s=>{
+    tbody += `<tr><td class="name-cell">${escapeHtml(s.name||'')}</td>`;
+    for(let i=0;i<5;i++){
+      const d = addDays(monday, i);
+      const ds = formatDate(d);
+      const inWork = workDays.includes(d.getDay());
+      const reps = state.reports.filter(r=> r.student_id===s.id && r.date===ds);
+      let html;
+      if(!inWork){ html = `<span class="cell-off">—</span>`; }
+      else if(reps.length>0){ html = `<span class="cell-ok">✓</span>`; }
+      else if(d > today){ html = `<span class="cell-off">—</span>`; }
+      else { html = `<span class="cell-no">✗</span>`; }
+      tbody += `<td>${html}</td>`;
+    }
+    tbody += `</tr>`;
+  });
+  if(students.length===0){
+    tbody = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">ไม่มีนักศึกษา</td></tr>`;
+  }
+  const tbl = $('#weeklyTable');
+  tbl.querySelector('thead').innerHTML = thead;
+  tbl.querySelector('tbody').innerHTML = tbody;
+}
+
+/* ---- Export ---- */
+function exportCSV(){
+  const startStr = $('#exportWeekSelect').value;
+  const monday = parseDate(startStr) || startOfWeek(new Date());
+  const end = addDays(monday, 4);
+  const students = state.users.filter(u=> (u.role||'').toLowerCase()==='student');
+  const studentMap = {}; students.forEach(s=> studentMap[s.id]=s);
+
+  const reps = state.reports.filter(r=>{
+    const d = parseDate(r.date);
+    return d && d>=monday && d<=end;
+  }).sort((a,b)=> (a.date||'').localeCompare(b.date||'') || (a.student_id||'').localeCompare(b.student_id||''));
+
+  const rows = [
+    ['วันที่','รหัสนักศึกษา','ชื่อ-นามสกุล','เวลาเข้า','เวลาออก','รายละเอียดงาน','ส่งเมื่อ'],
+  ];
+  reps.forEach(r=>{
+    const s = studentMap[r.student_id];
+    rows.push([
+      r.date||'',
+      r.student_id||'',
+      s?.name||'',
+      r.check_in||'',
+      r.check_out||'',
+      (r.description||'').replace(/\r?\n/g,' '),
+      r.submitted_at||'',
+    ]);
+  });
+
+  const csv = rows.map(row =>
+    row.map(cell=>{
+      const v = String(cell??'');
+      if(/[",\n]/.test(v)) return '"'+v.replace(/"/g,'""')+'"';
+      return v;
+    }).join(',')
+  ).join('\r\n');
+
+  // UTF-8 BOM for Excel
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `reports_${formatDate(monday)}_to_${formatDate(end)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('ส่งออก CSV สำเร็จ','success');
+}
+
+function exportPDF(){
+  // ensure weekly grid uses same selected week
+  $('#weekSelect').value = $('#exportWeekSelect').value;
+  renderWeeklyGrid();
+  // switch to weekly view to print
+  switchTeacherView('weekly');
+  setTimeout(()=>window.print(), 300);
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', ()=>{
+  if(CONFIG.SHEET_ID==='YOUR_SHEET_ID' || CONFIG.OAUTH_CLIENT_ID==='YOUR_CLIENT_ID' || CONFIG.API_KEY==='YOUR_API_KEY'){
+    showLoginError('⚠️ กรุณาตั้งค่า SHEET_ID, API_KEY และ OAUTH_CLIENT_ID ในไฟล์ก่อนใช้งาน');
+  }
+  initGoogleAuth();
+});
+</script>
+</body>
+</html>
