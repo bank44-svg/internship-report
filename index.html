@@ -603,6 +603,9 @@ a{color:inherit;text-decoration:none}
         <button class="sidebar-item" data-view="history">
           <span class="tab-icon">📅</span><span>ประวัติ</span>
         </button>
+        <button class="sidebar-item" data-view="profile">
+          <span class="tab-icon">👤</span><span>โปรไฟล์</span>
+        </button>
       </nav>
       <div class="sidebar-user">
         <div class="avatar" id="stuAvatarDesk"></div>
@@ -690,6 +693,35 @@ a{color:inherit;text-decoration:none}
           <div class="section-title">ประวัติย้อนหลัง 4 สัปดาห์</div>
           <div id="historyList" class="history-list"></div>
         </div>
+
+        <!-- View: profile -->
+        <div class="view" data-view="profile">
+          <div id="profileBanner" class="submitted-banner hidden" style="background:var(--yellow-soft);color:#92400e">
+            <span>⚠️</span><span>กรุณากรอกข้อมูลส่วนตัวก่อนใช้งานระบบ</span>
+          </div>
+          <div class="card">
+            <h2>ข้อมูลส่วนตัว</h2>
+            <form id="profileForm" autocomplete="off">
+              <div class="form-group">
+                <label class="form-label">📱 เบอร์โทรนักศึกษา</label>
+                <input type="tel" class="form-input" id="pf_phone" placeholder="08x-xxx-xxxx" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">👨‍👩‍👧 เบอร์โทรผู้ปกครอง</label>
+                <input type="tel" class="form-input" id="pf_parent_phone" placeholder="08x-xxx-xxxx" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">🧑‍🏫 ชื่อพี่เลี้ยง</label>
+                <input type="text" class="form-input" id="pf_mentor_name" placeholder="ชื่อ-นามสกุล" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">📞 เบอร์โทรพี่เลี้ยง</label>
+                <input type="tel" class="form-input" id="pf_mentor_phone" placeholder="08x-xxx-xxxx" required>
+              </div>
+              <button type="submit" class="btn btn-block" id="profileSubmitBtn">บันทึกข้อมูล</button>
+            </form>
+          </div>
+        </div>
       </main>
 
       <!-- Mobile bottom tabs -->
@@ -699,6 +731,9 @@ a{color:inherit;text-decoration:none}
         </button>
         <button class="tab" data-view="history">
           <span class="tab-icon">📅</span><span>ประวัติ</span>
+        </button>
+        <button class="tab" data-view="profile">
+          <span class="tab-icon">👤</span><span>โปรไฟล์</span>
         </button>
       </nav>
     </div>
@@ -726,6 +761,9 @@ a{color:inherit;text-decoration:none}
         </button>
         <button class="sidebar-item" data-view="weekly">
           <span class="tab-icon">📅</span><span>รายสัปดาห์</span>
+        </button>
+        <button class="sidebar-item" data-view="students">
+          <span class="tab-icon">👥</span><span>ข้อมูลนักศึกษา</span>
         </button>
         <button class="sidebar-item" data-view="export">
           <span class="tab-icon">📤</span><span>ส่งออก</span>
@@ -810,6 +848,12 @@ a{color:inherit;text-decoration:none}
           </div>
         </div>
 
+        <!-- Students info -->
+        <div class="view" data-view="students">
+          <div class="section-title">ข้อมูลติดต่อนักศึกษา</div>
+          <div id="studentsInfoList" class="student-list"></div>
+        </div>
+
         <!-- Export -->
         <div class="view" data-view="export">
           <div class="card">
@@ -842,7 +886,10 @@ a{color:inherit;text-decoration:none}
           <span class="tab-icon">🏠</span><span>ภาพรวม</span>
         </button>
         <button class="tab" data-view="weekly">
-          <span class="tab-icon">📅</span><span>รายสัปดาห์</span>
+          <span class="tab-icon">📅</span><span>สัปดาห์</span>
+        </button>
+        <button class="tab" data-view="students">
+          <span class="tab-icon">👥</span><span>นักศึกษา</span>
         </button>
         <button class="tab" data-view="export">
           <span class="tab-icon">📤</span><span>ส่งออก</span>
@@ -1262,6 +1309,18 @@ async function driveFetchImage(fileId){
 /* ============================================================
    SHEETS write helpers (update)
    ============================================================ */
+async function sheetsUpdateRange(range, values){
+  if(!state.token) throw new Error('ไม่มี access token');
+  const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const res = await fetch(url,{
+    method:'PUT',
+    headers:{ 'Authorization':`Bearer ${state.token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ values }),
+  });
+  if(!res.ok){ const t=await res.text(); throw new Error('Sheets update '+res.status+': '+t.slice(0,150)); }
+  return res.json();
+}
+
 async function sheetsUpdateCell(range, value){
   if(!state.token) throw new Error('ไม่มี access token');
   const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
@@ -1442,12 +1501,102 @@ function setupStudentUI(){
 
   // form
   setupStudentForm();
+  // profile form handler
+  $('#profileForm').onsubmit = onSubmitProfile;
 }
 
 function switchStudentView(view){
   $$('#screen-student .view').forEach(v=> v.classList.toggle('active', v.dataset.view===view));
   $$('#screen-student .tab, #screen-student .sidebar-item').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
-  $('#stuViewTitle').textContent = view==='form' ? 'ส่งงานวันนี้' : 'ประวัติย้อนหลัง';
+  const titles = { form:'ส่งงานวันนี้', history:'ประวัติย้อนหลัง', profile:'ข้อมูลส่วนตัว' };
+  $('#stuViewTitle').textContent = titles[view] || '';
+  if(view==='profile') renderProfileForm();
+}
+
+/* ============================================================
+   PROFILE — student fills phone numbers + mentor info
+   ============================================================ */
+const PROFILE_FIELDS = ['phone','parent_phone','mentor_name','mentor_phone'];
+
+function profileIncomplete(user){
+  return PROFILE_FIELDS.some(f => !(user[f]||'').trim());
+}
+
+function renderProfileForm(){
+  const u = state.user;
+  $('#pf_phone').value = u.phone || '';
+  $('#pf_parent_phone').value = u.parent_phone || '';
+  $('#pf_mentor_name').value = u.mentor_name || '';
+  $('#pf_mentor_phone').value = u.mentor_phone || '';
+  $('#profileBanner').classList.toggle('hidden', !profileIncomplete(u));
+}
+
+async function onSubmitProfile(e){
+  e.preventDefault();
+  const data = {
+    phone: $('#pf_phone').value.trim(),
+    parent_phone: $('#pf_parent_phone').value.trim(),
+    mentor_name: $('#pf_mentor_name').value.trim(),
+    mentor_phone: $('#pf_mentor_phone').value.trim(),
+  };
+  if(Object.values(data).some(v=>!v)){
+    toast('กรุณากรอกข้อมูลให้ครบทุกช่อง','error');
+    return;
+  }
+  const btn = $('#profileSubmitBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  try{
+    // Find row in users sheet
+    const rows = await sheetsRead('users!A1:Z');
+    const headers = rows[0].map(h=>String(h||'').trim());
+    const idIdx = headers.indexOf('id');
+    const targetRow = rows.findIndex((r,i)=> i>0 && r[idIdx]===state.user.id);
+    if(targetRow<0) throw new Error('ไม่พบข้อมูลผู้ใช้ใน Sheet');
+    const sheetRow = targetRow + 1; // 1-indexed
+    // Build column mapping
+    const colLetter = (i)=> i<26 ? String.fromCharCode(65+i) : String.fromCharCode(64+Math.floor(i/26)) + String.fromCharCode(65+i%26);
+    // Determine range and values for the 4 fields (might not be contiguous, write each)
+    for(const f of PROFILE_FIELDS){
+      const ci = headers.indexOf(f);
+      if(ci<0){ throw new Error(`ไม่พบคอลัมน์ "${f}" ใน Sheet — กรุณาเพิ่มคอลัมน์ก่อน`); }
+      await sheetsUpdateCell(`users!${colLetter(ci)}${sheetRow}`, data[f]);
+    }
+    Object.assign(state.user, data);
+    saveSession();
+    toast('บันทึกข้อมูลเรียบร้อย','success');
+    $('#profileBanner').classList.add('hidden');
+  }catch(err){
+    console.error(err);
+    toast('บันทึกล้มเหลว: '+err.message,'error',5000);
+  }finally{
+    btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
+  }
+}
+
+function renderStudentsInfo(){
+  const el = $('#studentsInfoList');
+  const students = state.users.filter(u=> (u.role||'').toLowerCase()==='student');
+  if(!students.length){
+    el.innerHTML = `<div class="empty"><div>ไม่มีข้อมูลนักศึกษา</div></div>`;
+    return;
+  }
+  el.innerHTML = students.map(s=>{
+    const incomplete = profileIncomplete(s);
+    return `
+      <div class="student-row" style="flex-direction:column;align-items:stretch;gap:6px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar" style="background:var(--pink-soft);color:var(--navy)">${escapeHtml((s.name||'?').slice(0,1))}</div>
+          <div style="flex:1;font-weight:600;font-size:14px">${escapeHtml(s.name||'')}</div>
+          ${incomplete ? '<span class="badge badge-yellow">ยังไม่กรอก</span>' : '<span class="badge badge-green">ครบ</span>'}
+        </div>
+        <div style="font-size:13px;color:var(--text);padding-left:46px;line-height:1.7">
+          <div>📱 นักศึกษา: ${escapeHtml(s.phone||'—')}</div>
+          <div>👨‍👩‍👧 ผู้ปกครอง: ${escapeHtml(s.parent_phone||'—')}</div>
+          <div>🧑‍🏫 พี่เลี้ยง: ${escapeHtml(s.mentor_name||'—')}</div>
+          <div>📞 เบอร์พี่เลี้ยง: ${escapeHtml(s.mentor_phone||'—')}</div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 function setupStudentForm(){
@@ -1487,10 +1636,19 @@ function setupStudentForm(){
 async function loadStudentData(){
   renderWeekStripSkeleton();
   try{
-    await Promise.all([ loadReports(), loadSettings() ]);
+    await Promise.all([ loadUsers(), loadReports(), loadSettings() ]);
+    // refresh state.user with latest from sheet (in case profile fields updated)
+    const fresh = state.users.find(u => u.id === state.user.id);
+    if(fresh){ Object.assign(state.user, fresh); saveSession(); }
     renderWeekStrip();
     renderStudentForm();
     renderHistory();
+    renderProfileForm();
+    // First-time: auto-switch to profile tab if data incomplete
+    if(profileIncomplete(state.user)){
+      switchStudentView('profile');
+      toast('กรุณากรอกข้อมูลส่วนตัวก่อนใช้งาน','info',4000);
+    }
   }catch(e){
     console.error(e);
     toast('โหลดข้อมูลล้มเหลว: '+e.message,'error',5000);
@@ -1740,8 +1898,9 @@ function setupTeacherUI(){
 function switchTeacherView(view){
   $$('#screen-teacher .view').forEach(v=> v.classList.toggle('active', v.dataset.view===view));
   $$('#screen-teacher .tab, #screen-teacher .sidebar-item').forEach(b=> b.classList.toggle('active', b.dataset.view===view));
-  const titles = { overview:'ภาพรวมวันนี้', weekly:'รายงานรายสัปดาห์', export:'ส่งออกข้อมูล' };
+  const titles = { overview:'ภาพรวมวันนี้', weekly:'รายงานรายสัปดาห์', students:'ข้อมูลนักศึกษา', export:'ส่งออกข้อมูล' };
   $('#tchViewTitle').textContent = titles[view] || '';
+  if(view==='students') renderStudentsInfo();
 }
 
 async function loadTeacherData(refresh=false){
