@@ -997,7 +997,7 @@ function initGoogleAuth(){
   state.tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CONFIG.OAUTH_CLIENT_ID,
     scope: SCOPES + ' email profile openid',
-    prompt: 'consent',
+    prompt: '',
     callback: handleTokenResponse,
   });
 
@@ -1022,7 +1022,7 @@ function initGoogleAuth(){
     </button>`;
   $('#customGoogleBtn').onclick = ()=>{
     clearLoginError();
-    state.tokenClient.requestAccessToken({ prompt: 'consent' });
+    state.tokenClient.requestAccessToken({ prompt: '' });
   };
 
   // Try restore session
