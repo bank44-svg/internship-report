@@ -1090,20 +1090,21 @@ function restoreSession(){
     state.token = s.token;
     state.tokenExpiry = s.tokenExpiry || 0;
     enterApp();
-    // refresh token silently if needed
+    // refresh token silently — prompt:'none' = ไม่แสดง UI ใด ๆ ทั้งสิ้น
     if(!state.token || Date.now() > state.tokenExpiry){
-      if(state.tokenClient) state.tokenClient.requestAccessToken({ prompt: '' });
+      if(state.tokenClient){
+        try{ state.tokenClient.requestAccessToken({ prompt: 'none' }); }
+        catch(e){ console.warn('silent refresh failed:',e); }
+      }
     }
   }catch{}
 }
 
 function logout(){
-  try{
-    if(state.token) google.accounts.oauth2.revoke(state.token, ()=>{});
-    google.accounts.id.disableAutoSelect();
-  }catch{}
+  // Note: ไม่ revoke token เพื่อไม่ให้ผู้ใช้ต้อง consent ใหม่ทุกครั้ง
+  // (ถ้าต้องการ revoke จริง ๆ ผู้ใช้ไปลบเองที่ myaccount.google.com/permissions)
   localStorage.removeItem('iship_session');
-  state.user = null; state.token = null;
+  state.user = null; state.token = null; state.tokenExpiry = 0;
   showScreen('#screen-login');
 }
 
