@@ -1330,14 +1330,41 @@ async function sheetsUpdateRange(range, values){
   return res.json();
 }
 
+async function ensureFreshToken(){
+  if(state.token && Date.now() < state.tokenExpiry) return;
+  return new Promise((resolve,reject)=>{
+    const origCb = state.tokenClient.callback;
+    state.tokenClient.callback = (resp)=>{
+      state.tokenClient.callback = origCb;
+      if(resp.access_token){
+        state.token = resp.access_token;
+        state.tokenExpiry = Date.now() + (resp.expires_in||3600)*1000 - 60000;
+        saveSession();
+        resolve();
+      }else reject(new Error('refresh token failed'));
+    };
+    state.tokenClient.requestAccessToken({ prompt:'' });
+  });
+}
+
 async function sheetsUpdateCell(range, value, inputOption='USER_ENTERED'){
-  if(!state.token) throw new Error('ไม่มี access token');
+  await ensureFreshToken();
   const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=${inputOption}`;
-  const res = await fetch(url,{
+  let res = await fetch(url,{
     method:'PUT',
     headers:{ 'Authorization':`Bearer ${state.token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values:[[value]] }),
   });
+  if(res.status===401){
+    // token หมดอายุ ขอใหม่แล้วลองอีกครั้ง
+    state.tokenExpiry = 0;
+    await ensureFreshToken();
+    res = await fetch(url,{
+      method:'PUT',
+      headers:{ 'Authorization':`Bearer ${state.token}`, 'Content-Type':'application/json' },
+      body: JSON.stringify({ values:[[value]] }),
+    });
+  }
   if(!res.ok){ const t=await res.text(); throw new Error('Sheets update '+res.status+': '+t.slice(0,150)); }
   return res.json();
 }
