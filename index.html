@@ -1086,6 +1086,15 @@ async function handleTokenResponse(resp){
     showLoginError('ไม่ได้รับ access token');
     return;
   }
+  // ตรวจว่า scope ที่ได้รับครบไหม ถ้าขาด spreadsheets หรือ drive.file ให้ขอ consent ใหม่
+  const grantedScopes = (resp.scope||'').split(/\s+/);
+  const required = ['https://www.googleapis.com/auth/spreadsheets','https://www.googleapis.com/auth/drive.file'];
+  const missing = required.filter(s => !grantedScopes.includes(s));
+  if(missing.length){
+    showLoginError('ต้องให้สิทธิ์เพิ่มเติม กำลังขอความยินยอม...');
+    setTimeout(()=> state.tokenClient.requestAccessToken({ prompt:'consent' }), 800);
+    return;
+  }
   try{
     state.token = resp.access_token;
     state.tokenExpiry = Date.now() + (resp.expires_in||3600)*1000 - 60000;
