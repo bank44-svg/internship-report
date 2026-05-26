@@ -1279,20 +1279,7 @@ async function driveUploadImage(dataUrl, filename, folderId){
     body,
   });
   const data = await res.json();
-  const fileId = data.id;
-
-  // แชร์รูปให้ทุกคนที่ login แล้วอ่านได้ (แก้ปัญหา Drive 404 เวลาครูดูรูป)
-  try{
-    await driveFetch(`/files/${fileId}/permissions?sendNotificationEmail=false`,{
-      method:'POST',
-      headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ type:'anyone', role:'reader' }),
-    });
-  }catch(e){
-    console.warn('share image permission failed:', e.message);
-  }
-
-  return fileId;
+  return data.id;
 }
 
 async function driveSharePermission(fileId, email, role='writer'){
@@ -1481,12 +1468,12 @@ async function syncFolderPermissions(){
   return { added, failed, total: state.users.length };
 }
 
-// คืน root folder โดยตรง — นักเรียนไม่มีสิทธิ์สร้าง subfolder ใน Drive ของครู
-// ชื่อไฟล์จะมี student id เพื่อแยกแยะ
+// Ensure student's subfolder exists. Used at submit time.
 async function ensureStudentFolder(){
   const rootId = state.settings.drive_folder_id;
   if(!rootId) throw new Error('ยังไม่ได้ตั้งค่า Drive folder — กรุณาให้ครู login เพื่อ setup ระบบ');
-  return rootId;
+  const name = `${state.user.id} - ${state.user.name}`;
+  return await driveEnsureFolder(name, rootId);
 }
 
 /* ============================================================
@@ -1844,7 +1831,7 @@ async function onSubmitReport(e){
     if(currentUpload && currentUpload.startsWith('data:')){
       btn.textContent = 'กำลังอัปโหลดรูป...';
       const folderId = await ensureStudentFolder();
-      const filename = `${state.user.id}_${todayStr()}.jpg`;
+      const filename = `${todayStr()}.jpg`;
       const fileId = await driveUploadImage(currentUpload, filename, folderId);
       imageRef = 'drive:'+fileId;
       btn.textContent = 'กำลังบันทึก...';
@@ -1868,19 +1855,7 @@ async function onSubmitReport(e){
     renderHistory();
   }catch(err){
     console.error(err);
-    // แสดงข้อความ error ให้กระชับ ไม่ยาวจนล้นหน้าจอ
-    let msg = err.message || 'เกิดข้อผิดพลาด';
-    if(msg.includes('Drive') && msg.includes('404'))
-      msg = 'ไม่พบโฟลเดอร์ Drive — กรุณาให้ครูเข้าระบบเพื่อ setup ใหม่';
-    else if(msg.includes('403') || msg.includes('permission'))
-      msg = 'ไม่มีสิทธิ์เข้าถึง Drive — กรุณาติดต่อครู';
-    else if(msg.includes('401') || msg.includes('token'))
-      msg = 'Session หมดอายุ — กรุณาเข้าสู่ระบบใหม่';
-    else if(msg.includes('Sheets'))
-      msg = 'บันทึกข้อมูลไม่สำเร็จ — กรุณาลองใหม่';
-    else if(msg.length > 60)
-      msg = msg.slice(0, 60) + '...';
-    toast('ส่งล้มเหลว: ' + msg, 'error', 5000);
+    toast('ส่งล้มเหลว: '+err.message,'error',5000);
     btn.disabled = false;
     btn.textContent = 'ส่งรายงาน';
   }
