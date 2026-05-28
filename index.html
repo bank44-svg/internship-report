@@ -1192,16 +1192,19 @@ async function sheetsRead(range){
 }
 
 async function sheetsAppend(range, rows){
-  if(!state.token) throw new Error('ไม่มี access token — กรุณาเข้าสู่ระบบใหม่');
+  await ensureFreshToken();
   const url = `${SHEETS_BASE}/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-  const res = await fetch(url, {
+  const doFetch = ()=> fetch(url, {
     method:'POST',
-    headers:{
-      'Authorization':`Bearer ${state.token}`,
-      'Content-Type':'application/json',
-    },
+    headers:{ 'Authorization':`Bearer ${state.token}`, 'Content-Type':'application/json' },
     body: JSON.stringify({ values: rows }),
   });
+  let res = await doFetch();
+  if(res.status===401){
+    state.tokenExpiry = 0;
+    await ensureFreshToken();
+    res = await doFetch();
+  }
   if(!res.ok){
     const t = await res.text();
     throw new Error(`Sheets append failed: ${res.status} ${t.slice(0,150)}`);
@@ -1213,12 +1216,18 @@ async function sheetsAppend(range, rows){
    DRIVE API
    ============================================================ */
 async function driveFetch(path, opts={}){
-  if(!state.token) throw new Error('ไม่มี access token');
+  await ensureFreshToken();
   const url = path.startsWith('http') ? path : `${DRIVE_BASE}${path}`;
-  const res = await fetch(url, {
+  const doFetch = ()=> fetch(url, {
     ...opts,
     headers:{ 'Authorization':`Bearer ${state.token}`, ...(opts.headers||{}) },
   });
+  let res = await doFetch();
+  if(res.status===401){
+    state.tokenExpiry = 0;
+    await ensureFreshToken();
+    res = await doFetch();
+  }
   if(!res.ok){
     const t = await res.text();
     throw new Error(`Drive ${res.status}: ${t.slice(0,200)}`);
