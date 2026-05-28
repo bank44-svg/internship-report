@@ -9,6 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+window.supabase = createClient(
+  'https://bhbtwuhwgeyfhokmwkfc.supabase.co',
+  'sb_publishable_7zvF1eQL4el8D05YI0P87w_wxQNks8_'
+);
+window.dispatchEvent(new Event('supabase-ready'));
+</script>
 <style>
 /* ============================================================
    CSS Variables & Reset
@@ -1035,12 +1043,12 @@ function clearLoginError(){
 }
 
 function initGoogleAuth(){
-  if(!window.google || !window.google.accounts){
+  if(!window.google || !window.google.accounts || !window.supabase){
     setTimeout(initGoogleAuth, 200);
     return;
   }
 
-  // Use access token flow only (avoids COOP/postMessage issues)
+  // Token client สำหรับ Drive (เก็บแยก เพราะ Supabase Auth กับ Drive ต้องคนละ flow)
   state.tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CONFIG.OAUTH_CLIENT_ID,
     scope: SCOPES + ' email profile openid',
@@ -1389,21 +1397,27 @@ function rowsToObjects(rows){
 }
 
 async function loadUsers(){
-  const rows = await sheetsRead('users!A1:Z');
-  state.users = rowsToObjects(rows);
+  const { data, error } = await window.supabase.from('users').select('*');
+  if(error) throw new Error('โหลด users ล้มเหลว: '+error.message);
+  state.users = data || [];
   return state.users;
 }
 async function loadReports(){
-  const rows = await sheetsRead('reports!A1:Z');
-  state.reports = rowsToObjects(rows);
+  const { data, error } = await window.supabase.from('reports').select('*').order('date',{ascending:false});
+  if(error) throw new Error('โหลด reports ล้มเหลว: '+error.message);
+  // normalize: change image_base64 → keep as-is, treat 'drive:' or 'data:' the same
+  state.reports = (data||[]).map(r=>({
+    ...r,
+    date: r.date, // YYYY-MM-DD string
+    check_in: (r.check_in||'').slice(0,5),  // HH:MM:SS → HH:MM
+    check_out: (r.check_out||'').slice(0,5),
+  }));
   return state.reports;
 }
 async function loadSettings(){
-  try{
-    const rows = await sheetsRead('settings!A1:Z');
-    const obj = rowsToObjects(rows);
-    obj.forEach(o=>{ if(o.key) state.settings[o.key] = o.value; });
-  }catch(e){ /* settings is optional */ }
+  const { data, error } = await window.supabase.from('settings').select('*');
+  if(error) { console.warn(error); return state.settings; }
+  (data||[]).forEach(o => { if(o.key) state.settings[o.key] = o.value; });
   return state.settings;
 }
 
@@ -1431,15 +1445,10 @@ async function ensureRootFolderAsTeacher(){
   return folderId;
 }
 
-// Save drive_folder_id to settings tab
+// Save drive_folder_id to settings table
 async function saveSettingDriveFolder(folderId){
-  const rows = await sheetsRead('settings!A1:Z');
-  const idx = rows.findIndex(r => (r[0]||'').toLowerCase()==='drive_folder_id');
-  if(idx >= 0){
-    await sheetsUpdateCell(`settings!B${idx+1}`, folderId);
-  }else{
-    await sheetsAppend('settings!A1', [['drive_folder_id', folderId]]);
-  }
+  const { error } = await window.supabase.from('settings').upsert({ key:'drive_folder_id', value: folderId });
+  if(error) throw new Error('บันทึก settings ล้มเหลว: '+error.message);
 }
 
 // Sync permissions: share root folder AND the Sheet with all users in users tab
@@ -1616,22 +1625,8 @@ async function onSubmitProfile(e){
   const btn = $('#profileSubmitBtn');
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
   try{
-    // Find row in users sheet
-    const rows = await sheetsRead('users!A1:Z');
-    const headers = rows[0].map(h=>String(h||'').trim());
-    const idIdx = headers.indexOf('id');
-    const targetRow = rows.findIndex((r,i)=> i>0 && r[idIdx]===state.user.id);
-    if(targetRow<0) throw new Error('ไม่พบข้อมูลผู้ใช้ใน Sheet');
-    const sheetRow = targetRow + 1; // 1-indexed
-    // Build column mapping
-    const colLetter = (i)=> i<26 ? String.fromCharCode(65+i) : String.fromCharCode(64+Math.floor(i/26)) + String.fromCharCode(65+i%26);
-    // Determine range and values for the 4 fields (might not be contiguous, write each)
-    for(const f of PROFILE_FIELDS){
-      const ci = headers.indexOf(f);
-      if(ci<0){ throw new Error(`ไม่พบคอลัมน์ "${f}" ใน Sheet — กรุณาเพิ่มคอลัมน์ก่อน`); }
-      // RAW mode = ไม่ตีความตัวเลข เก็บเป็น text เพื่อรักษา 0 ข้างหน้าเบอร์โทร
-      await sheetsUpdateCell(`users!${colLetter(ci)}${sheetRow}`, data[f], 'RAW');
-    }
+    const { error } = await window.supabase.from('users').update(data).eq('id', state.user.id);
+    if(error) throw new Error(error.message);
     Object.assign(state.user, data);
     saveSession();
     toast('บันทึกข้อมูลเรียบร้อย','success');
@@ -1846,17 +1841,17 @@ async function onSubmitReport(e){
       btn.textContent = 'กำลังบันทึก...';
     }
 
-    const row = [[
-      uid(),
-      state.user.id,
-      todayStr(),
-      ci,
-      co,
-      desc,
-      imageRef,
-      new Date().toISOString(),
-    ]];
-    await sheetsAppend('reports!A1', row);
+    const { error: insErr } = await window.supabase.from('reports').insert({
+      id: uid(),
+      student_id: state.user.id,
+      date: todayStr(),
+      check_in: ci,
+      check_out: co,
+      description: desc,
+      image_base64: imageRef,
+      submitted_at: new Date().toISOString(),
+    });
+    if(insErr) throw new Error('บันทึก report ล้มเหลว: '+insErr.message);
     toast('ส่งรายงานสำเร็จ','success');
     await loadReports();
     renderWeekStrip();
